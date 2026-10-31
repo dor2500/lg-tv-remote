@@ -2,6 +2,27 @@
 
 [English](HOW-IT-WORKS.en.md) | **עברית**
 
+## פלטפורמות נתמכות
+
+האפליקציה מדברת עם כל פלטפורמה דרך דרייבר ב-`src/main/drivers`. כל דרייבר מציע את אותן פעולות ומצהיר על `capabilities` ועל `buttons`. הממשק מסתיר את מה שהטלוויזיה המחוברת לא מציעה. רק הדרייבר של LG הופעל מול טלוויזיה אמיתית.
+
+| פלטפורמה | חיבור | צימוד | סוד שנשמר |
+|---|---|---|---|
+| LG webOS | WebSocket, פורטים 3001 ו-3000 | אישור בטלוויזיה או PIN | Client key |
+| Samsung Tizen | WebSocket, פורטים 8002 ו-8001 | אישור בטלוויזיה | Token |
+| Android TV, Google TV | TLS עם protobuf: פורט 6467 לצימוד, 6466 לשליטה | קוד בן 6 תווים בטלוויזיה | תעודה שהאפליקציה יוצרת |
+| Roku | HTTP, פורט 8060 | אין | אין |
+| Vizio SmartCast | HTTPS, פורטים 7345 ו-9000 | קוד בטלוויזיה | Token |
+| Sony BRAVIA | HTTP: JSON-RPC ו-IRCC SOAP | מפתח שמוגדר בטלוויזיה | מפתח משותף |
+
+- **זיהוי:** ב"זיהוי אוטומטי" האפליקציה בודקת בכתובת את התשובה או הפורטים של כל פלטפורמה, לפי הסדר Roku, Samsung, LG, Vizio, Android TV, Sony. טלוויזיה שמורה מדלגת על זה.
+- **חיפוש ברשת:** האפליקציה שולחת חיפושי SSDP עבור LG, Samsung, Roku ו-Sony, ושאילתות mDNS עבור Android TV ו-Vizio, מכל מתאמי הרשת.
+- **צימוד Android TV:** הסוד הוא גיבוב SHA-256 של מפתחות שתי התעודות ושל הקוד. הבייט הראשון שלו חייב להתאים לבייט הראשון של הקוד, וכך טעות הקלדה נתפסת לפני ששולחים משהו.
+- **אפליקציות ב-Android TV:** הפרוטוקול לא מאפשר לקבל רשימת אפליקציות, ולכן האפליקציה מציעה אפליקציות נפוצות דרך קישורי אפליקציה.
+- **זיהוי ניתוק:** ב-Roku, Vizio ו-Sony אין חיבור פתוח, ולכן האפליקציה שואלת אותן שוב ושוב, ו-3 כשלים ברצף נחשבים לניתוק.
+
+כל מה שמופיע בהמשך מתאר את הדרייבר של LG, אלא אם כתוב אחרת.
+
 ## התמונה הכללית
 
 ```text
@@ -126,15 +147,26 @@ App                                     TV
 
 | קובץ | תפקיד |
 |---|---|
-| `src/main/webos.js` | פרוטוקול הטלוויזיה, בלי תלות ב-Electron |
-| `src/main/manifest.js` | ההרשאות שהאפליקציה מבקשת |
+| `src/main/drivers/index.js` | רשימת הפלטפורמות והזיהוי האוטומטי |
+| `src/main/drivers/common.js` | מה שמשותף לדרייברים |
+| `src/main/drivers/discovery.js` | חיפוש ברשת |
+| `src/main/drivers/webos.js` | LG |
+| `src/main/drivers/samsung.js` | Samsung |
+| `src/main/drivers/androidtv.js` | Android TV ו-Google TV |
+| `src/main/drivers/roku.js` | Roku |
+| `src/main/drivers/vizio.js` | Vizio |
+| `src/main/drivers/sony.js` | Sony |
+| `src/main/manifest.js` | ההרשאות שהאפליקציה מבקשת מטלוויזיות LG |
 | `src/main/main.js` | חלון, חיבור מחדש, לולאת תצוגה, IPC |
 | `src/main/store.js` | שמירת טלוויזיות ומפתחות |
 | `src/main/preload.js` | הגשר בין הממשק לתהליך הראשי |
 | `src/renderer/` | הממשק |
 | `src/renderer/i18n.js` | הטקסטים בעברית ובאנגלית |
 | `install.ps1` | מתקין ה-PowerShell בפקודה אחת |
-| `tests/fake-tv.js` | סימולטור טלוויזיה |
+| `tests/fake-tv.js` | סימולטור טלוויזיית LG |
+| `tests/fake-brands.js` | סימולטורים של שאר המותגים |
+| `tests/brands.test.js` | בדיקות פרוטוקול לשאר המותגים |
+| `tests/e2e-brands.js` | בדיקת האפליקציה המלאה עם שאר המותגים |
 | `tests/packaged-smoke.js` | בדיקת הגרסה הארוזה |
 | `tests/webos.test.js` | בדיקות פרוטוקול |
 | `tests/e2e.js` | בדיקת האפליקציה המלאה |
@@ -144,8 +176,13 @@ App                                     TV
 
 ## מקורות
 
-ה-API לא מתועד רשמית על ידי LG, וההתנהגות עלולה להשתנות בעדכון קושחה. הפרוטוקול מבוסס על:
+ה-API לא מתועד רשמית על ידי LG, וההתנהגות עלולה להשתנות בעדכון קושחה. אותו סיכון קיים גם ב-Samsung, Android TV ו-Vizio. הפרוטוקולים מבוססים על:
 
+- [samsung-tv-ws-api](https://github.com/xchwarze/samsung-tv-ws-api)
+- [androidtvremote2](https://github.com/tronikos/androidtvremote2)
+- [Roku External Control Protocol](https://developer.roku.com/docs/developer-program/dev-tools/external-control-api.md)
+- [pyvizio](https://github.com/raman325/pyvizio) ו-[הערות על ה-API של Vizio](https://github.com/exiva/Vizio_SmartCast_API)
+- [pybravia](https://github.com/Drafteed/pybravia)
 - [aiowebostv](https://pypi.org/project/aiowebostv/)
 - [lgtvremote-cli](https://pypi.org/project/lgtvremote-cli/)
 - [תיעוד קהילתי של צילום המסך](https://gist.github.com/Informatic/1983f2e501444cf1cbd182e50820d6c1)

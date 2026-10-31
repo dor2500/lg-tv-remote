@@ -9,7 +9,7 @@ const { startFakeTv } = require('./fake-tv');
   console.log('Fake TV is running. Enter any address in the app, e.g. 127.0.0.1');
   const child = spawn(electron, [path.join(__dirname, '..')], {
     stdio: 'inherit',
-    env: { ...process.env, LGTV_FAKE_ENDPOINTS: fake.endpoint },
+    env: { ...process.env, TV_TEST_CONFIG: JSON.stringify({ webos: { endpoints: [fake.endpoint] } }) },
   });
   child.on('exit', () => process.exit(0));
 })();

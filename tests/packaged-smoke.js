@@ -9,9 +9,9 @@ const { startFakeTv } = require('./fake-tv');
   const fake = await startFakeTv();
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'lgtv-pkg-'));
   const app = await electron.launch({
-    executablePath: path.join(__dirname, '..', 'dist', 'win-unpacked', 'LG TV Remote.exe'),
+    executablePath: path.join(__dirname, '..', 'dist', 'win-unpacked', 'Universal TV Remote.exe'),
     args: [`--user-data-dir=${userData}`],
-    env: { ...process.env, LGTV_FAKE_ENDPOINTS: fake.endpoint },
+    env: { ...process.env, TV_TEST_CONFIG: JSON.stringify({ webos: { endpoints: [fake.endpoint] } }) },
   });
   const page = await app.firstWindow();
   await page.fill('#host', '127.0.0.1');

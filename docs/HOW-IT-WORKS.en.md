@@ -2,6 +2,27 @@
 
 **English** | [עברית](HOW-IT-WORKS.md)
 
+## Supported platforms
+
+The app talks to each platform through a driver in `src/main/drivers`. Every driver offers the same methods and declares its `capabilities` and `buttons`. The interface hides what a connected TV doesn't offer. Only the LG driver has been used with a real TV.
+
+| Platform | Connection | Pairing | Stored secret |
+|---|---|---|---|
+| LG webOS | WebSocket, ports 3001 and 3000 | Approval on the TV, or a PIN | Client key |
+| Samsung Tizen | WebSocket, ports 8002 and 8001 | Approval on the TV | Token |
+| Android TV, Google TV | TLS with protobuf: port 6467 to pair, 6466 to control | 6-character code on the TV | A certificate this app generates |
+| Roku | HTTP, port 8060 | None | None |
+| Vizio SmartCast | HTTPS, ports 7345 and 9000 | Code on the TV | Token |
+| Sony BRAVIA | HTTP: JSON-RPC and IRCC SOAP | Key set on the TV | Pre-shared key |
+
+- **Detection:** with **Detect automatically**, the app checks the address for each platform's answer or ports, in the order Roku, Samsung, LG, Vizio, Android TV, Sony. A saved TV skips this.
+- **Network search:** the app sends SSDP searches for LG, Samsung, Roku and Sony, and mDNS queries for Android TV and Vizio, from every network adapter.
+- **Android TV pairing:** the secret is a SHA-256 hash of both certificates' keys and the code. Its first byte must match the code's first byte, which catches typing mistakes before anything is sent.
+- **Android TV apps:** the protocol can't list apps, so the app offers common ones through app links.
+- **Liveness:** Roku, Vizio and Sony have no open connection, so the app polls them, and treats 3 failures in a row as a lost connection.
+
+Everything below describes the LG driver, unless it says otherwise.
+
 ## Overview
 
 ```text
@@ -129,15 +150,26 @@ App                                     TV
 
 | File | Purpose |
 |---|---|
-| `src/main/webos.js` | The TV protocol, with no Electron dependency |
-| `src/main/manifest.js` | The permissions the app requests |
+| `src/main/drivers/index.js` | The list of platforms and automatic detection |
+| `src/main/drivers/common.js` | What the drivers share |
+| `src/main/drivers/discovery.js` | Network search |
+| `src/main/drivers/webos.js` | LG |
+| `src/main/drivers/samsung.js` | Samsung |
+| `src/main/drivers/androidtv.js` | Android TV and Google TV |
+| `src/main/drivers/roku.js` | Roku |
+| `src/main/drivers/vizio.js` | Vizio |
+| `src/main/drivers/sony.js` | Sony |
+| `src/main/manifest.js` | The permissions the app requests from LG TVs |
 | `src/main/main.js` | Window, reconnection, view loop, IPC |
 | `src/main/store.js` | Saved TVs and keys |
 | `src/main/preload.js` | The bridge between the interface and the main process |
 | `src/renderer/` | The interface |
 | `src/renderer/i18n.js` | English and Hebrew text |
 | `install.ps1` | The one-line PowerShell installer |
-| `tests/fake-tv.js` | The simulated TV |
+| `tests/fake-tv.js` | The simulated LG TV |
+| `tests/fake-brands.js` | The other simulated brands |
+| `tests/brands.test.js` | Protocol tests for the other brands |
+| `tests/e2e-brands.js` | Test of the full app with the other brands |
 | `tests/webos.test.js` | Protocol tests |
 | `tests/e2e.js` | Test of the full app |
 | `tests/packaged-smoke.js` | Test of the packaged build |
@@ -147,8 +179,13 @@ App                                     TV
 
 ## Sources
 
-LG doesn't officially document this API, and its behavior may change with a firmware update. The protocol is based on:
+LG doesn't officially document this API, and its behavior may change with a firmware update. The same risk applies to Samsung, Android TV and Vizio. The protocols are based on:
 
+- [samsung-tv-ws-api](https://github.com/xchwarze/samsung-tv-ws-api)
+- [androidtvremote2](https://github.com/tronikos/androidtvremote2)
+- [Roku External Control Protocol](https://developer.roku.com/docs/developer-program/dev-tools/external-control-api.md)
+- [pyvizio](https://github.com/raman325/pyvizio) and [Vizio SmartCast API notes](https://github.com/exiva/Vizio_SmartCast_API)
+- [pybravia](https://github.com/Drafteed/pybravia)
 - [aiowebostv](https://pypi.org/project/aiowebostv/)
 - [lgtvremote-cli](https://pypi.org/project/lgtvremote-cli/)
 - [Community notes on screen capture](https://gist.github.com/Informatic/1983f2e501444cf1cbd182e50820d6c1)

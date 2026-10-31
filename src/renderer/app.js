@@ -15,7 +15,10 @@ const ui = {
   cursor: { x: 0, y: 0 },
   homing: false,
   lastStatus: { state: 'disconnected' },
+  capabilities: [],
 };
+
+const can = (capability) => ui.capabilities.includes(capability);
 
 let toastTimer;
 function showError(message) {
@@ -27,7 +30,7 @@ function showError(message) {
 }
 
 async function act(name, ...args) {
-  const result = await lgtv.action(name, ...args);
+  const result = await tvRemote.action(name, ...args);
   if (!result.ok) showError(errorText(result));
   return result;
 }
@@ -38,6 +41,7 @@ function renderDynamicText() {
   $('screen-toggle').textContent = t(ui.screenOff ? 'screenOn' : 'screenOff');
   $('fps').textContent = '';
   ui.frames = [];
+  $('view-text').textContent = t(can('capture') ? 'viewOff' : 'viewUnsupported');
   renderStatusMessage(ui.lastStatus);
 }
 
@@ -67,13 +71,13 @@ $('power').addEventListener('click', async () => {
     act('powerOff');
   } else if (ui.host || $('host').value.trim()) {
     const host = ui.host || $('host').value.trim();
-    const result = await lgtv.wake(host);
+    const result = await tvRemote.wake(host);
     setMessage(result.ok ? t('wakeSent') : errorText(result), !result.ok);
     if (result.ok) startConnect(host);
   }
 });
 
-$('mute').addEventListener('click', () => act('setMute', !ui.muted));
+$('mute').addEventListener('click', () => (can('mute') ? act('setMute', !ui.muted) : act('button', 'MUTE')));
 
 let volumeTimer;
 $('volume').addEventListener('input', (event) => {
@@ -88,9 +92,9 @@ function setMessage(text, isError = false) {
   message.classList.toggle('error', isError);
 }
 
-async function startConnect(host, pairingType) {
+async function startConnect(host, pairingType, brand = $('brand').value) {
   ui.host = host;
-  const result = await lgtv.connect(host, pairingType);
+  const result = await tvRemote.connect(host, pairingType, brand);
   if (!result.ok) setMessage(errorText(result), true);
 }
 
@@ -105,23 +109,30 @@ $('pin-mode').addEventListener('click', () => {
     setMessage(t('enterAddressFirst'), true);
     return;
   }
-  startConnect(host, 'PIN');
+  startConnect(host, 'PIN', 'webos');
 });
 
+// Only LG TVs can be asked to pair by code instead of by an on-screen prompt.
+function renderBrandChoice() {
+  const brand = $('brand').value;
+  $('pin-mode').hidden = brand !== 'auto' && brand !== 'webos';
+}
+$('brand').addEventListener('change', renderBrandChoice);
+
 $('pin-send').addEventListener('click', async () => {
-  const result = await lgtv.action('submitPin', $('pin').value.trim());
+  const result = await tvRemote.action('submitPin', $('pin').value.trim());
   if (!result.ok) setMessage(errorText(result), true);
 });
 
 $('scan').addEventListener('click', async () => {
   setMessage(t('scanning'));
-  const result = await lgtv.discover();
+  const result = await tvRemote.discover();
   if (!result.ok || !result.value.length) {
     setMessage(t('scanNone'), true);
     return;
   }
   setMessage(t('scanFound', { count: result.value.length }));
-  renderTvList(result.value.map((tv) => ({ host: tv.host, label: tv.name })), false);
+  renderTvList(result.value.map((tv) => ({ host: tv.host, brand: tv.brand, label: tv.name })), false);
 });
 
 function renderTvList(tvs, canForget) {
@@ -135,7 +146,9 @@ function renderTvList(tvs, canForget) {
     pick.textContent = tv.label === tv.host ? tv.host : `${tv.label} (${tv.host})`;
     pick.addEventListener('click', () => {
       $('host').value = tv.host;
-      startConnect(tv.host);
+      $('brand').value = tv.brand;
+      renderBrandChoice();
+      startConnect(tv.host, undefined, tv.brand);
     });
     row.append(pick);
     if (canForget) {
@@ -143,7 +156,7 @@ function renderTvList(tvs, canForget) {
       forget.type = 'button';
       forget.textContent = t('forget');
       forget.addEventListener('click', async () => {
-        const result = await lgtv.forget(tv.host);
+        const result = await tvRemote.forget(tv.host);
         if (result.ok) renderTvList(result.value.tvs, true);
       });
       row.append(forget);
@@ -160,7 +173,8 @@ const STATUS_TEXT = {
 function renderStatusMessage({ state, error, errorCode, pairingType }) {
   const detail = error ? errorText({ code: errorCode, error }) : '';
   if (state === 'pairing') {
-    setMessage(t(pairingType === 'PIN' ? 'pairingPin' : 'pairingPrompt'));
+    const messages = { PIN: 'pairingPin', CODE: 'pairingPin', PSK: 'pairingPsk' };
+    setMessage(t(messages[pairingType] || 'pairingPrompt'));
   } else if (STATUS_TEXT[state]) {
     setMessage(detail ? `${t(STATUS_TEXT[state])} (${detail})` : t(STATUS_TEXT[state]));
   } else if (detail) {
@@ -182,11 +196,12 @@ function applyStatus(status) {
   $('stand').hidden = !connected;
   $('drawer').hidden = !connected;
   $('volume').disabled = !connected;
-  $('pin-row').hidden = !(state === 'pairing' && pairingType === 'PIN');
+  $('pin-row').hidden = !(state === 'pairing' && pairingType !== 'PROMPT');
 
   renderStatusMessage(status);
 
   if (connected) {
+    applyCapabilities(status);
     $('tv-name').textContent = [info.product, info.model].filter(Boolean).join(', ');
     loadLists();
     setLive(false);
@@ -199,16 +214,43 @@ function applyStatus(status) {
   }
 }
 
+// Each TV platform offers different features, so only what this TV can do stays on screen.
+function applyCapabilities({ capabilities, buttons }) {
+  ui.capabilities = capabilities;
+  for (const key of document.querySelectorAll('[data-button]')) key.hidden = !buttons.includes(key.dataset.button);
+  $('mute').hidden = !can('mute') && !buttons.includes('MUTE');
+  $('volume').hidden = !can('volumeSet');
+  const capture = can('capture');
+  for (const id of ['live', 'fps', 'placeholder-live']) $(id).hidden = !capture;
+  document.querySelector('.rate').hidden = !capture;
+  $('view-text').textContent = t(capture ? 'viewOff' : 'viewUnsupported');
+  $('lock').hidden = !can('pointer');
+  $('screen-toggle').hidden = !can('screenOff');
+  $('panel-apps').hidden = !can('apps');
+  $('apps-hint').hidden = !can('appsCommon');
+  $('panel-inputs').hidden = !can('inputs');
+  $('panel-text').hidden = !can('text');
+  $('text-del').hidden = !can('textDelete');
+}
+
 async function refreshSaved() {
-  const result = await lgtv.saved();
+  const result = await tvRemote.saved();
   if (!result.ok) return;
   renderTvList(result.value.tvs, true);
-  if (result.value.lastHost && !$('host').value) $('host').value = result.value.lastHost;
+  if (result.value.lastHost && !$('host').value) {
+    $('host').value = result.value.lastHost;
+    const last = result.value.tvs.find((tv) => tv.host === result.value.lastHost);
+    if (last) $('brand').value = last.brand;
+    renderBrandChoice();
+  }
 }
 
 /* Apps and inputs */
 async function loadLists() {
-  const [apps, inputs] = await Promise.all([lgtv.action('listApps'), lgtv.action('listInputs')]);
+  const [apps, inputs] = await Promise.all([
+    can('apps') ? tvRemote.action('listApps') : { ok: true, value: [] },
+    can('inputs') ? tvRemote.action('listInputs') : { ok: true, value: [] },
+  ]);
   ui.apps = apps.ok ? apps.value : [];
   renderApps();
   const list = $('inputs');
@@ -258,7 +300,7 @@ function setLive(on, silent = false) {
   if (!on) {
     ui.frames = [];
     $('fps').textContent = '';
-    if (!silent) lgtv.liveStop();
+    if (!silent) tvRemote.liveStop();
     if (ui.connected) {
       $('frame').hidden = true;
       $('placeholder').hidden = false;
@@ -267,7 +309,7 @@ function setLive(on, silent = false) {
 }
 
 async function startLive() {
-  const result = await lgtv.liveStart(Number($('rate').value));
+  const result = await tvRemote.liveStart(Number($('rate').value));
   if (!result.ok) {
     showError(errorText(result));
     return;
@@ -279,9 +321,9 @@ async function startLive() {
 
 $('live').addEventListener('click', () => (ui.live ? setLive(false) : startLive()));
 $('placeholder-live').addEventListener('click', startLive);
-$('rate').addEventListener('change', () => lgtv.liveInterval(Number($('rate').value)));
+$('rate').addEventListener('change', () => tvRemote.liveInterval(Number($('rate').value)));
 
-lgtv.on('frame', ({ src }) => {
+tvRemote.on('frame', ({ src }) => {
   if (!ui.live) return;
   const frame = $('frame');
   frame.src = src;
@@ -296,7 +338,7 @@ lgtv.on('frame', ({ src }) => {
   }
 });
 
-lgtv.on('live-stopped', (result) => {
+tvRemote.on('live-stopped', (result) => {
   setLive(false, true);
   showError(result.code === 'NO_PERMISSION'
     ? t('captureBlocked')
@@ -343,7 +385,7 @@ async function homeCursor() {
   renderCursor();
   delete $('cursor').dataset.ready;
   for (let i = 0; i < 40 && document.pointerLockElement === screen; i += 1) {
-    lgtv.move(-60, -40);
+    tvRemote.move(-60, -40);
     await new Promise((r) => setTimeout(r, 16));
   }
   ui.pendingMove = { dx: 0, dy: 0 };
@@ -357,13 +399,13 @@ function flushPointer() {
   ui.moveScheduled = false;
   const { pendingMove: m, pendingScroll: s } = ui;
   if (m.dx || m.dy) {
-    lgtv.move(m.dx, m.dy);
+    tvRemote.move(m.dx, m.dy);
     const gain = pointerGain(m.dx, m.dy);
     ui.cursor.x = Math.max(0, Math.min(TV_WIDTH, ui.cursor.x + m.dx * gain));
     ui.cursor.y = Math.max(0, Math.min(TV_HEIGHT, ui.cursor.y + m.dy * gain));
     renderCursor();
   }
-  if (s.dx || s.dy) lgtv.scroll(s.dx, s.dy);
+  if (s.dx || s.dy) tvRemote.scroll(s.dx, s.dy);
   ui.pendingMove = { dx: 0, dy: 0 };
   ui.pendingScroll = { dx: 0, dy: 0 };
 }
@@ -422,11 +464,11 @@ $('screen-toggle').addEventListener('click', async () => {
   $('screen-toggle').textContent = t(next ? 'screenOn' : 'screenOff');
 });
 
-$('disconnect').addEventListener('click', () => lgtv.disconnect());
+$('disconnect').addEventListener('click', () => tvRemote.disconnect());
 
 /* State from main */
-lgtv.on('status', applyStatus);
-lgtv.on('tv-state', ({ volume, muted, appId }) => {
+tvRemote.on('status', applyStatus);
+tvRemote.on('tv-state', ({ volume, muted, appId }) => {
   if (typeof volume === 'number' && document.activeElement !== $('volume')) $('volume').value = volume;
   if (typeof muted === 'boolean') {
     ui.muted = muted;

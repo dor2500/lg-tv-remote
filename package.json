@@ -1,29 +1,30 @@
 {
-  "name": "lg-tv-remote",
-  "version": "0.1.3",
-  "description": "Windows desktop remote control and screen viewer for LG webOS TVs",
+  "name": "universal-tv-remote",
+  "version": "0.2.0",
+  "description": "Windows desktop remote control for LG, Samsung, Android TV, Google TV, Roku, Vizio and Sony TVs",
   "main": "src/main/main.js",
   "private": true,
   "author": "dor2500",
   "scripts": {
     "start": "electron .",
     "start:fake": "node tests/run-with-fake-tv.js",
-    "test": "node --test tests/webos.test.js",
+    "test": "node --test tests/webos.test.js tests/brands.test.js",
     "test:e2e": "node tests/e2e.js",
+    "test:brands": "node tests/e2e-brands.js",
     "dist": "electron-builder --win portable"
   },
   "dependencies": {
+    "selfsigned": "^2.4.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "playwright-core": "^1.49.1",
-    "selfsigned": "^2.4.1"
+    "playwright-core": "^1.49.1"
   },
   "build": {
     "appId": "com.dor2500.lgtvremote",
-    "productName": "LG TV Remote",
+    "productName": "Universal TV Remote",
     "files": ["src/**/*"],
     "win": { "target": "portable" }
   }

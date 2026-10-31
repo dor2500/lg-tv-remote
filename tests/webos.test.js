@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const dgram = require('node:dgram');
-const { WebOSClient, wakeOnLan } = require('../src/main/webos');
+const { WebOSClient, wakeOnLan } = require('../src/main/drivers/webos');
 const { startFakeTv } = require('./fake-tv');
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));

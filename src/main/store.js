@@ -40,11 +40,18 @@ function getKey(host) {
   return tv ? decryptKey(tv.key) : null;
 }
 
+function getBrand(host) {
+  const tv = readAll().tvs[host];
+  if (!tv) return null;
+  // TVs saved before other brands were supported have no brand field, and were all LG.
+  return tv.brand || (tv.key ? 'webos' : null);
+}
+
 function saveTv(host, fields) {
   const data = readAll();
   const tv = data.tvs[host] || {};
   if (fields.key) tv.key = encryptKey(fields.key);
-  for (const name of ['label', 'mac', 'wifiMac']) {
+  for (const name of ['brand', 'label', 'mac', 'wifiMac']) {
     if (fields[name]) tv[name] = fields[name];
   }
   data.tvs[host] = tv;
@@ -64,7 +71,7 @@ function listTvs() {
   return {
     lastHost: data.lastHost,
     tvs: Object.entries(data.tvs).map(([host, tv]) => ({
-      host, label: tv.label || host, hasMac: Boolean(tv.mac || tv.wifiMac),
+      host, brand: tv.brand || 'webos', label: tv.label || host, hasMac: Boolean(tv.mac || tv.wifiMac),
     })),
   };
 }
@@ -74,4 +81,4 @@ function getMacs(host) {
   return [tv.mac, tv.wifiMac].filter(Boolean);
 }
 
-module.exports = { getKey, saveTv, forgetTv, listTvs, getMacs };
+module.exports = { getKey, getBrand, saveTv, forgetTv, listTvs, getMacs };

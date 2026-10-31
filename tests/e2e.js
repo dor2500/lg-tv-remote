@@ -21,7 +21,7 @@ async function waitFor(check, label, timeoutMs = 8000) {
 async function launch(fake, userData) {
   const app = await electron.launch({
     args: [path.join(__dirname, '..'), `--user-data-dir=${userData}`],
-    env: { ...process.env, LGTV_FAKE_ENDPOINTS: fake.endpoint },
+    env: { ...process.env, TV_TEST_CONFIG: JSON.stringify({ webos: { endpoints: [fake.endpoint] } }) },
   });
   const page = await app.firstWindow();
   await page.waitForLoadState('domcontentloaded');

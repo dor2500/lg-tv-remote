@@ -17,7 +17,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const env = { ...process.env };
-  delete env.LGTV_FAKE_ENDPOINTS;
+  delete env.TV_TEST_CONFIG;
   const app = await electron.launch({ args: [path.join(__dirname, '..'), `--user-data-dir=${userData}`], env });
   const page = await app.firstWindow();
   await page.waitForLoadState('domcontentloaded');
@@ -65,7 +65,7 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
       return src;
     };
     await save('real-before-key.jpg');
-    const result = await page.evaluate((key) => window.lgtv.action('button', key), checkKey);
+    const result = await page.evaluate((key) => window.tvRemote.action('button', key), checkKey);
     console.log(`${checkKey} result:`, JSON.stringify(result));
     await delay(4000);
     await save('real-after-key.jpg');

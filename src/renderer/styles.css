@@ -277,3 +277,6 @@ input:not([type]), select, .connect input {
 @media (prefers-reduced-motion: reduce) {
   .key:active { transform: none; }
 }
+
+.panel { display: contents; }
+#brand { width: 100%; }

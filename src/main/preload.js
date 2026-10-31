@@ -2,9 +2,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const events = ['status', 'tv-state', 'frame', 'live-stopped'];
 
-contextBridge.exposeInMainWorld('lgtv', {
+contextBridge.exposeInMainWorld('tvRemote', {
   action: (name, ...args) => ipcRenderer.invoke('tv:action', name, ...args),
-  connect: (host, pairingType) => ipcRenderer.invoke('tv:connect', host, pairingType),
+  connect: (host, pairingType, brand) => ipcRenderer.invoke('tv:connect', host, pairingType, brand),
   disconnect: () => ipcRenderer.invoke('tv:disconnect'),
   forget: (host) => ipcRenderer.invoke('tv:forget', host),
   saved: () => ipcRenderer.invoke('tv:saved'),

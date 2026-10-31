@@ -1,8 +1,10 @@
-# LG TV Remote
+# Universal TV Remote
 
 **English** | [עברית](README.he.md)
 
-A Windows desktop app that controls an LG webOS TV from your computer: a full on-screen remote, mouse and keyboard control, app and input switching, volume, and a view of the TV's screen inside the app.
+A Windows desktop app that controls your smart TV from your computer: LG, Samsung, Android TV and Google TV (Sony, Philips, TCL, Xiaomi and others), Roku, Vizio and Sony BRAVIA. It offers an on-screen remote, apps, inputs, typing and volume. On LG TVs it also shows the TV's screen in the app and controls a mouse pointer.
+
+> **Only LG has been tested on a real TV.** The other brands are written from their published protocols and tested against simulators, so they may need fixes on a real set. See [Which TVs work](#which-tvs-work).
 
 ![The app showing the home screen of a real LG TV](docs/images/real-home-app.png)
 
@@ -15,7 +17,8 @@ The app is available in English and Hebrew. The technical details are in [How it
 ## Contents
 
 - [Quick install](#quick-install)
-- [What it can and cannot do](#what-it-can-and-cannot-do)
+- [Which TVs work](#which-tvs-work)
+- [What it can and cannot do on LG](#what-it-can-and-cannot-do-on-lg)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Connecting for the first time](#connecting-for-the-first-time)
@@ -34,14 +37,39 @@ The app is available in English and Hebrew. The technical details are in [How it
 Run this in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/dor2500/lg-tv-remote/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/dor2500/universal-tv-remote/main/install.ps1 | iex
 ```
 
 This installs the latest version for your user, adds a Start menu shortcut and opens the app. Administrator rights are not needed.
 
-## What it can and cannot do
+## Which TVs work
 
-The app comes close to AnyDesk, but webOS sets real limits.
+No app can control every TV over a network. The app works with the platforms below, and it shows only the buttons and panels that your TV supports.
+
+| | LG webOS | Samsung Tizen | Android TV / Google TV | Roku | Vizio SmartCast | Sony BRAVIA (key) |
+|---|---|---|---|---|---|---|
+| Sold by, for example | LG | Samsung, 2016 and later | Sony, Philips, TCL, Hisense, Xiaomi | TCL, Hisense, Sharp, Roku players | Vizio | Sony |
+| First connection | Approve on the TV | Approve on the TV | Type the code from the TV | Nothing | Type the code from the TV | Set a key on the TV and type it |
+| Remote buttons | All | All | Most | No digits or colors | No digits or colors | Those the TV reports |
+| Apps | Installed list | Installed list | 7 common apps | Installed list | No | Installed list |
+| Inputs | Yes | HDMI 1–4 | HDMI 1–4 | On Roku TVs | Yes | Yes |
+| Typing | Yes | Yes | Yes | Yes, one letter at a time | No | Yes |
+| Volume slider | Yes | No, + and − only | No, + and − only | No, + and − only | Yes | Yes |
+| Turn off | Yes | Yes | Yes (power toggle) | On Roku TVs | Yes | Yes |
+| **Screen view in the app** | **Yes** | No | No | No | No | No |
+| **Mouse pointer** | **Yes** | No | No | No | No | No |
+| Tested on a real TV | **Yes, one model** | No | No | No | No | No |
+
+**Not supported:**
+
+- **TVs with no network connection:** nothing on the computer can reach them. They would need extra hardware, such as an infrared transmitter, which this app doesn't support.
+- **Other platforms:** Samsung TVs from before 2016, Hisense VIDAA, Panasonic, Fire TV, Philips TVs without Android, and others. The app reports that it found no supported TV.
+
+**Why only LG shows the screen:** webOS has a screenshot command that works without changing anything on the TV. The other platforms don't offer one in these protocols.
+
+## What it can and cannot do on LG
+
+On LG the app comes close to AnyDesk, but webOS sets real limits.
 
 | Feature | Status |
 |---|---|
@@ -62,32 +90,32 @@ LG does not officially document the protocol this app uses, so a firmware update
 ## Requirements
 
 - Windows 10 or 11, 64-bit.
-- An LG TV running webOS.
+- A TV from [the supported list](#which-tvs-work).
 - The computer and the TV on the same network, or connected through a VPN.
-- Access to the TV's regular remote for the first pairing.
+- Access to the TV's regular remote for the first pairing. Roku is the exception.
 
 ## Installation
 
 ### Option 1: PowerShell command (recommended)
 
 ```powershell
-irm https://raw.githubusercontent.com/dor2500/lg-tv-remote/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/dor2500/universal-tv-remote/main/install.ps1 | iex
 ```
 
 The command:
 
 1. Finds the latest release on GitHub.
 2. Downloads the app and checks the file's size and, when GitHub provides one, its checksum.
-3. Saves it to `%LOCALAPPDATA%\Programs\LG TV Remote`.
+3. Saves it to `%LOCALAPPDATA%\Programs\Universal TV Remote`.
 4. Adds an "LG TV Remote" shortcut to the Start menu.
 5. Opens the app.
 
-Run the same command again to update. Close the app first. You can [read the script](install.ps1) before running it.
+Run the same command again to update. Close the app first. It also replaces a version installed under the old name, LG TV Remote, and keeps your saved TVs. You can [read the script](install.ps1) before running it.
 
 ### Option 2: Download the file
 
-1. Open the [latest release](https://github.com/dor2500/lg-tv-remote/releases/latest).
-2. Download `LG.TV.Remote.0.1.3.exe`.
+1. Open the [latest release](https://github.com/dor2500/universal-tv-remote/releases/latest).
+2. Download `Universal.TV.Remote.0.2.0.exe`.
 3. Run it. It does not need installing.
 
 The file is not code-signed, so Windows may show a warning. To continue, select **More info**, then **Run anyway**.
@@ -97,11 +125,11 @@ The file is not code-signed, so Windows may show a warning. To continue, select 
 You need [Node.js](https://nodejs.org) and [Git](https://git-scm.com).
 
 ```bash
-git clone https://github.com/dor2500/lg-tv-remote.git
+git clone https://github.com/dor2500/universal-tv-remote.git
 ```
 
 ```bash
-cd lg-tv-remote
+cd universal-tv-remote
 ```
 
 ```bash
@@ -122,10 +150,10 @@ If the app says Electron was not installed correctly (this happened on Node 26):
 This removes the app installed with the PowerShell command:
 
 ```powershell
-Remove-Item -Recurse "$env:LOCALAPPDATA\Programs\LG TV Remote"; Remove-Item "$([Environment]::GetFolderPath('Programs'))\LG TV Remote.lnk"
+Remove-Item -Recurse "$env:LOCALAPPDATA\Programs\Universal TV Remote"; Remove-Item "$([Environment]::GetFolderPath('Programs'))\Universal TV Remote.lnk"
 ```
 
-To also remove saved TVs and pairing keys, delete `%APPDATA%\LG TV Remote`.
+To also remove saved TVs and pairing keys, delete `%APPDATA%\universal-tv-remote`. If you first installed a version called LG TV Remote, your data is in `%APPDATA%\lg-tv-remote` instead.
 
 ## Connecting for the first time
 
@@ -133,9 +161,19 @@ To also remove saved TVs and pairing keys, delete `%APPDATA%\LG TV Remote`.
 
 1. Turn on the TV and make sure it is on the same network as the computer.
 2. Open the app.
-3. Select **Search for TVs on the network** and choose your TV. Alternatively, type its IP address and select **Connect**.
-4. Accept the request on the TV screen with the TV's remote. You have 90 seconds.
-5. The remote lights up with a green dot, and the app lists your TV's apps and inputs.
+3. Select **Search for TVs on the network** and choose your TV. Alternatively, type its IP address and select **Connect**. **TV type** can stay on **Detect automatically**.
+4. Complete the first connection for your TV, as listed below. You have 90 seconds.
+5. The remote lights up with a green dot, and the app lists what your TV offers.
+
+| TV | First connection |
+|---|---|
+| LG, Samsung | Accept the request on the TV screen with the TV's remote |
+| Android TV, Google TV | The TV shows a 6-character code. Type it in the app |
+| Vizio | The TV shows a code. Type it in the app |
+| Roku | Nothing to approve. If control is refused, enable **Settings > System > Advanced system settings > Control by mobile apps** |
+| Sony BRAVIA, as **Sony BRAVIA (with a key)** | On the TV, open **Settings > Network > Home network > IP control**, set authentication to **Normal and Pre-Shared Key**, choose a key and type it in the app. The menu varies by model |
+
+A Sony TV with Android is detected as Android TV, which needs no setup. Choose **Sony BRAVIA (with a key)** by hand to get its installed apps and volume slider instead.
 
 Later connections don't need approval.
 
@@ -143,7 +181,7 @@ Later connections don't need approval.
 
 **Keep the address stable:** reserve a fixed IP for the TV in your router. Otherwise the saved address can stop working when the router assigns a new one.
 
-**If no request appears:** select **Connect with a PIN** and type the code shown on the TV.
+**If no request appears on an LG TV:** select **Connect with a PIN** and type the code shown on the TV.
 
 ## Choosing a language
 
@@ -158,6 +196,8 @@ Messages written by the TV itself are shown as the TV sends them.
 *This picture and the one below use a simulated TV.*
 
 ### The remote
+
+The table lists every button. Your TV may show fewer.
 
 | Button | What it does |
 |---|---|
@@ -189,6 +229,8 @@ If the connection drops, the app keeps trying to reconnect, waiting up to 30 sec
 
 ### Viewing the screen
 
+LG TVs only.
+
 ![Viewing the TV screen](docs/images/live-en.png)
 
 Select **Show screen** to start, and **Stop showing** to stop. The **Rate** menu has three options:
@@ -206,6 +248,8 @@ The original picture from the TV looks like this:
 ![A capture as received from the TV](docs/images/real-home-tv.jpg)
 
 ### Mouse and keyboard
+
+LG TVs only. On other TVs, use the arrows and the typing panel.
 
 Select **Control with mouse and keyboard**, or click the picture. The app then captures your mouse until you press Esc.
 
@@ -243,17 +287,17 @@ The side panel appears once you are connected.
 
 ## Turning the TV on over the network
 
-The power button can wake the TV with a Wake-on-LAN packet. This needs three things:
+The power button can wake the TV with a Wake-on-LAN packet, on TVs that report their MAC address: LG, Samsung, Roku and Sony in the app's tests. This needs three things:
 
 1. One successful connection, so the app has learned the TV's MAC address.
-2. The setting enabled on the TV, usually called "Turn on via Wi-Fi" or "LG Connect Apps". The name varies by model.
+2. The setting enabled on the TV. On LG it is usually called "Turn on via Wi-Fi" or "LG Connect Apps". The name varies by brand and model.
 3. The computer on the same home network as the TV.
 
 This has not yet been tested on a real TV.
 
 ## Control from outside your home
 
-**Do not forward ports 3000 or 3001 on your router.** The TV isn't built to be exposed to the internet, and doing so could let others reach it.
+**Do not forward your TV's ports on your router.** The TV isn't built to be exposed to the internet, and doing so could let others reach it.
 
 Use a VPN instead. Here's the approach with [Tailscale](https://tailscale.com), which needs a computer that stays on at home. This path has not yet been tested.
 
@@ -275,12 +319,15 @@ From outside your home:
 
 ## What has been tested
 
-Tested on an **LG OLED55C6** (`OLED55C66LA`) on a home network:
+Only one real TV has been tried: an **LG OLED55C6** (`OLED55C66LA`) on a home network. **Samsung, Android TV, Google TV, Roku, Vizio and Sony have not been tried on any real TV.** They pass automated tests against simulators written from open-source clients and vendor documentation, so a real set may behave differently.
+
+On the OLED55C6:
 
 | Worked on the real TV | Not yet tested on a real TV |
 |---|---|
 | Pairing by on-screen approval | Pairing by PIN |
-| Reconnecting without new approval | Network search |
+| Reconnecting without new approval | Choosing a found TV from the list |
+| Automatic detection as LG, and network search finding it | |
 | Listing 43 apps and 4 inputs | Opening apps and switching inputs |
 | Reading the volume | Changing the volume and muting |
 | Viewing live TV at 960×540, about 3–4 pictures per second | Protected content such as Netflix |
@@ -290,7 +337,7 @@ Tested on an **LG OLED55C6** (`OLED55C66LA`) on a home network:
 
 On this TV, LG blocks the older public signature that open-source clients send. The app detects that and pairs without it. Without the signature, the TV may grant fewer permissions, so some untested features might be refused.
 
-Every feature also passes automated tests against a simulated TV. Those tests prove the app's logic, not how a real TV responds. Other models and webOS versions have not been tried.
+Those tests prove the app's logic, not how a real TV responds. Other LG models and webOS versions have not been tried.
 
 ## Troubleshooting
 
@@ -298,7 +345,12 @@ Every feature also passes automated tests against a simulated TV. Those tests pr
 |---|---|
 | "Can't reach the TV" | Check that the TV is on and the address is correct, and that the computer is on the same network |
 | Network search finds nothing | Type the address by hand. Some networks and firewalls block device discovery |
-| No request appears on the TV | Try connecting with a PIN |
+| "No supported TV answered" | Check that the TV is on. Choose the type by hand. Your TV may not be [supported](#which-tvs-work) |
+| No request appears on an LG TV | Try connecting with a PIN |
+| "Network control is turned off" on a Roku | Enable **Control by mobile apps** in its settings |
+| The code isn't accepted | Type it again exactly as shown. A Sony key must match the one set on the TV |
+| An Android TV app doesn't open | It may not be installed. The app can't see what is installed |
+| Buttons are missing | Your TV's protocol doesn't offer them |
 | Pairing times out | Connect again and accept the request within 90 seconds |
 | The TV keeps asking for approval | Remove the app from the TV's connected devices, if listed, select **Forget** and pair again |
 | "This TV blocks screenshots" | Control keeps working. Try selecting **Forget** and pairing again. Your TV may not allow screenshots |
@@ -317,27 +369,33 @@ Every feature also passes automated tests against a simulated TV. Those tests pr
 No.
 
 **Does anything get installed on the TV?**
-No. The app uses the network interface already built into webOS.
+No. The app uses the network interface already built into the TV.
 
 **Can I hear the TV's sound on my computer?**
-No. webOS doesn't offer this over this interface.
+No. These interfaces don't offer it.
 
 **Why isn't the picture smooth video?**
 A TV without root offers screenshots only, and one has to be requested each time.
 
-**Will this work on my LG TV?**
-Probably, if it runs webOS, but only the OLED55C6 has been tested. Older TVs may behave differently.
+**Will this work on my TV?**
+Check [the list](#which-tvs-work). Only the LG OLED55C6 has been tested. Other TVs may behave differently, and may need fixes.
+
+**Does it work with every TV?**
+No. A TV needs a supported platform and a network connection.
+
+**Why can't I see the screen of my Samsung or Android TV?**
+Those protocols have no screenshot command, and this app doesn't change anything on the TV.
 
 **Can it work with a Mac or Linux?**
 Only Windows builds are provided and tested.
 
 **Can someone else on my network take over my TV?**
-Not through this app without approval on the TV's screen. Pairing needs that approval, and the key is stored encrypted on your computer.
+On most TVs, not through this app without approval on the TV. Roku is the exception: it has no pairing, so anyone on your network can send it commands if **Control by mobile apps** allows it.
 
 ## Privacy and security
 
 - The app talks directly to your TV. It has no server, account or telemetry.
-- The pairing key is encrypted on your computer with Windows DPAPI.
+- Pairing keys are encrypted on your computer with Windows DPAPI. That includes the Android TV certificate and the Sony key.
 - Anyone holding that key on your network could control the TV, so only install the app on computers you trust.
 - The TV uses a self-signed certificate that can't be verified, so the connection is encrypted but the TV's identity isn't checked. Use it on a network you trust.
 - To revoke access, select **Forget** in the app, and remove the app from the TV's connected devices, if your TV lists them.
@@ -348,19 +406,25 @@ Not through this app without approval on the TV's screen. Pairing needs that app
 npm test
 ```
 
-Protocol tests against the simulated TV.
+Protocol tests against simulated TVs of every brand.
 
 ```bash
 npm run test:e2e
 ```
 
-Drives the real app against the simulated TV.
+Drives the real app against the simulated LG TV.
+
+```bash
+npm run test:brands
+```
+
+Drives the real app against the other simulated brands.
 
 ```bash
 npm run start:fake
 ```
 
-Opens the app with a simulated TV, so you can try it without one. Type `127.0.0.1` as the address.
+Opens the app with a simulated LG TV, so you can try it without one. Type `127.0.0.1` as the address.
 
 ```bash
 npm run dist

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:">
-  <title>LG TV Remote</title>
+  <title>Universal TV Remote</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -76,6 +76,16 @@
           <form class="connect" id="connect-form" autocomplete="off">
             <h1 data-i18n="connectTitle"></h1>
             <p class="hint" data-i18n="connectHint"></p>
+            <label for="brand" data-i18n="tvType"></label>
+            <select id="brand">
+              <option value="auto" data-i18n="brandAuto"></option>
+              <option value="webos">LG (webOS)</option>
+              <option value="samsung">Samsung (Tizen)</option>
+              <option value="androidtv">Android TV / Google TV</option>
+              <option value="roku">Roku</option>
+              <option value="vizio">Vizio (SmartCast)</option>
+              <option value="sony" data-i18n="brandSony"></option>
+            </select>
             <label for="host" data-i18n="tvAddress"></label>
             <div class="inline">
               <input id="host" dir="ltr" placeholder="192.168.1.50" required spellcheck="false">
@@ -94,7 +104,7 @@
           </form>
 
           <div class="placeholder" id="placeholder" hidden>
-            <p data-i18n="viewOff"></p>
+            <p id="view-text"></p>
             <button id="placeholder-live" class="primary" data-i18n="showScreen"></button>
           </div>
 
@@ -122,13 +132,19 @@
     </section>
 
     <aside class="drawer" id="drawer" hidden>
-      <h2 data-i18n="apps"></h2>
-      <input id="app-filter" data-i18n-placeholder="searchApps" data-i18n-aria="searchApps">
-      <ul id="apps" class="list"></ul>
+      <div class="panel" id="panel-apps">
+        <h2 data-i18n="apps"></h2>
+        <p class="hint" id="apps-hint" data-i18n="appsCommonHint" hidden></p>
+        <input id="app-filter" data-i18n-placeholder="searchApps" data-i18n-aria="searchApps">
+        <ul id="apps" class="list"></ul>
+      </div>
 
-      <h2 data-i18n="inputs"></h2>
-      <ul id="inputs" class="list"></ul>
+      <div class="panel" id="panel-inputs">
+        <h2 data-i18n="inputs"></h2>
+        <ul id="inputs" class="list"></ul>
+      </div>
 
+      <div class="panel" id="panel-text">
       <h2 data-i18n="typing"></h2>
       <p class="hint" data-i18n="typingHint"></p>
       <form id="text-form" class="stack">
@@ -139,6 +155,7 @@
           <button type="button" id="text-enter" data-i18n="confirm"></button>
         </div>
       </form>
+      </div>
     </aside>
   </main>
   <div class="toast" id="toast" role="alert" hidden></div>

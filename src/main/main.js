@@ -1,10 +1,16 @@
+const fs = require('node:fs');
 const path = require('node:path');
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const { WebOSClient, wakeOnLan, discover } = require('./webos');
+const { createDriver, capabilitiesOf, buttonsOf, detectBrand, wakeOnLan } = require('./drivers');
+const { discover } = require('./drivers/discovery');
 const store = require('./store');
 
-// Test hook: run against tests/fake-tv.js instead of a real TV.
-const FAKE_ENDPOINTS = process.env.LGTV_FAKE_ENDPOINTS ? process.env.LGTV_FAKE_ENDPOINTS.split(',') : null;
+// Test hook: run against the simulated TVs in tests/ instead of real ones.
+const TEST_CONFIG = process.env.TV_TEST_CONFIG ? JSON.parse(process.env.TV_TEST_CONFIG) : {};
+
+// Before the rename this app kept its data, including the keys that decrypt saved pairings, in another folder.
+const LEGACY_DATA = path.join(app.getPath('appData'), 'lg-tv-remote');
+if (!app.commandLine.hasSwitch('user-data-dir') && fs.existsSync(LEGACY_DATA)) app.setPath('userData', LEGACY_DATA);
 
 let win = null;
 let tv = null;
@@ -29,7 +35,7 @@ function createWindow() {
     minHeight: 660,
     backgroundColor: '#0d0f12',
     autoHideMenuBar: true,
-    title: 'LG TV Remote',
+    title: 'Universal TV Remote',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -45,7 +51,7 @@ function createWindow() {
   win.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
-async function connect(host, pairingType = 'PROMPT') {
+async function connect(host, pairingType = 'PROMPT', requestedBrand = null) {
   clearTimeout(reconnectTimer);
   stopLive();
   if (tv) {
@@ -55,10 +61,25 @@ async function connect(host, pairingType = 'PROMPT') {
   wantConnected = host;
   status('connecting', { host });
 
-  const client = new WebOSClient({ host, clientKey: store.getKey(host), endpoints: FAKE_ENDPOINTS });
+  let brand = requestedBrand && requestedBrand !== 'auto' ? requestedBrand : store.getBrand(host);
+  if (!brand) {
+    try {
+      brand = await detectBrand(host, TEST_CONFIG);
+    } catch (err) {
+      if (wantConnected === host) {
+        wantConnected = null;
+        status('disconnected', { error: err.message, errorCode: err.code });
+      }
+      throw err;
+    }
+    if (wantConnected !== host) return null;
+  }
+  // A key belongs to one platform, so a different choice for this address starts a new pairing.
+  const credentials = store.getBrand(host) === brand ? store.getKey(host) : null;
+  const client = createDriver(brand, { host, credentials, config: TEST_CONFIG });
   tv = client;
   client.on('pairing', (type) => status('pairing', { host, pairingType: type }));
-  client.on('key', (key) => store.saveTv(host, { key }));
+  client.on('key', (key) => store.saveTv(host, { key, brand }));
   client.on('socket-error', () => {});
   client.on('closed', ({ byUser }) => {
     if (tv !== client) return;
@@ -71,7 +92,7 @@ async function connect(host, pairingType = 'PROMPT') {
     status('reconnecting', { host });
     reconnectTimer = setTimeout(() => {
       reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-      connect(host).catch(() => {});
+      connect(host, 'PROMPT', brand).catch(() => {});
     }, reconnectDelay);
   });
 
@@ -84,11 +105,11 @@ async function connect(host, pairingType = 'PROMPT') {
       tv = null;
     }
     // Keep retrying a TV we were already paired with (it may just be off); a failed first pairing stops.
-    if (store.getKey(host) && err.code === 'UNREACHABLE') {
+    if (store.getBrand(host) === brand && err.code === 'UNREACHABLE') {
       status('reconnecting', { host, error: err.message, errorCode: err.code });
       reconnectTimer = setTimeout(() => {
         reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-        connect(host).catch(() => {});
+        connect(host, 'PROMPT', brand).catch(() => {});
       }, reconnectDelay);
     } else {
       wantConnected = null;
@@ -100,29 +121,14 @@ async function connect(host, pairingType = 'PROMPT') {
   reconnectDelay = 2000;
   const info = await client.getInfo();
   store.saveTv(host, {
+    brand,
     label: [info.product, info.model].filter(Boolean).join(' · ') || host,
     mac: info.mac,
     wifiMac: info.wifiMac,
   });
-  subscribeState(client);
-  status('connected', { host, info, endpoint: client.endpoint });
+  client.watchState((state) => send('tv-state', state));
+  status('connected', { host, info, brand, capabilities: capabilitiesOf(client), buttons: buttonsOf(client) });
   return info;
-}
-
-function subscribeState(client) {
-  const safe = (uri, handler) => {
-    try {
-      client.subscribe(uri, handler);
-    } catch {
-      // Live state is a nicety; controls keep working without it.
-    }
-  };
-  safe('ssap://audio/getVolume', (p) => {
-    const volume = p.volumeStatus ? p.volumeStatus.volume : p.volume;
-    const muted = p.volumeStatus ? p.volumeStatus.muteStatus : p.muted;
-    send('tv-state', { volume, muted });
-  });
-  safe('ssap://com.webos.applicationManager/getForegroundAppInfo', (p) => send('tv-state', { appId: p.appId }));
 }
 
 function stopLive() {
@@ -202,7 +208,7 @@ function registerIpc() {
     if (!Object.hasOwn(actions, name)) throw new Error(`Unknown action: ${name}`);
     return actions[name](...args);
   });
-  handle('tv:connect', (host, pairingType) => connect(String(host).trim(), pairingType));
+  handle('tv:connect', (host, pairingType, brand) => connect(String(host).trim(), pairingType, brand));
   handle('tv:disconnect', () => {
     clearTimeout(reconnectTimer);
     wantConnected = null;

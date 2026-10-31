@@ -12,7 +12,7 @@ async function capture(lang, suffix) {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'lgtv-docs-'));
   const app = await electron.launch({
     args: [path.join(__dirname, '..'), `--user-data-dir=${userData}`],
-    env: { ...process.env, LGTV_FAKE_ENDPOINTS: fake.endpoint },
+    env: { ...process.env, TV_TEST_CONFIG: JSON.stringify({ webos: { endpoints: [fake.endpoint] } }) },
   });
   const page = await app.firstWindow();
   await page.waitForLoadState('domcontentloaded');

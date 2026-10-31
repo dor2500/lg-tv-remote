@@ -1,10 +1,9 @@
 // SSAP client for LG webOS TVs. Has no Electron dependency so it can be tested against a fake TV.
-const { EventEmitter } = require('node:events');
 const http = require('node:http');
 const https = require('node:https');
-const dgram = require('node:dgram');
 const WebSocket = require('ws');
-const { MANIFEST, UNSIGNED_MANIFEST } = require('./manifest');
+const { MANIFEST, UNSIGNED_MANIFEST } = require('../manifest');
+const { BaseDriver, friendly, wakeOnLan } = require('./common');
 
 const REQUEST_TIMEOUT_MS = 8000;
 const PAIRING_TIMEOUT_MS = 90000;
@@ -17,12 +16,17 @@ const BUTTONS = new Set([
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 ]);
 
-class WebOSClient extends EventEmitter {
-  constructor({ host, clientKey = null, endpoints = null, requestTimeoutMs = REQUEST_TIMEOUT_MS }) {
-    super();
-    this.host = host;
+class WebOSClient extends BaseDriver {
+  static brand = 'webos';
+
+  static capabilities = ['apps', 'inputs', 'text', 'textDelete', 'volumeSet', 'mute', 'screenOff', 'powerOff', 'pointer', 'capture'];
+
+  static buttons = [...BUTTONS];
+
+  constructor({ host, credentials = null, clientKey = credentials, endpoints = null, config = {}, requestTimeoutMs = REQUEST_TIMEOUT_MS }) {
+    super({ host, config });
     this.clientKey = clientKey;
-    this.endpoints = endpoints || [`wss://${host}:3001`, `ws://${host}:3000`];
+    this.endpoints = endpoints || config.endpoints || [`wss://${host}:3001`, `ws://${host}:3000`];
     this.requestTimeoutMs = requestTimeoutMs;
     this.ws = null;
     this.pointer = null;
@@ -348,6 +352,22 @@ class WebOSClient extends EventEmitter {
     return downloadImage(this._toTvUrl(imageUri));
   }
 
+  watchState(onState) {
+    const safe = (uri, handler) => {
+      try {
+        this.subscribe(uri, handler);
+      } catch {
+        // Live state is a nicety; controls keep working without it.
+      }
+    };
+    safe('ssap://audio/getVolume', (p) => {
+      const volume = p.volumeStatus ? p.volumeStatus.volume : p.volume;
+      const muted = p.volumeStatus ? p.volumeStatus.muteStatus : p.muted;
+      onState({ volume, muted });
+    });
+    safe('ssap://com.webos.applicationManager/getForegroundAppInfo', (p) => onState({ appId: p.appId }));
+  }
+
   close() {
     this.closedByUser = true;
     this._closePointer();
@@ -395,62 +415,4 @@ function downloadImage(url) {
   });
 }
 
-function friendly(code, message, cause) {
-  const err = new Error(message);
-  err.code = code;
-  if (cause) err.cause = cause;
-  return err;
-}
-
-function wakeOnLan(mac, { broadcast = '255.255.255.255', port = 9 } = {}) {
-  const hex = String(mac).replace(/[^0-9a-f]/gi, '');
-  if (hex.length !== 12) return Promise.reject(friendly('BAD_INPUT', 'Invalid MAC address'));
-  const macBytes = Buffer.from(hex, 'hex');
-  const packet = Buffer.concat([Buffer.alloc(6, 0xff), ...Array(16).fill(macBytes)]);
-  return new Promise((resolve, reject) => {
-    const socket = dgram.createSocket('udp4');
-    socket.once('error', (err) => { socket.close(); reject(err); });
-    socket.bind(() => {
-      socket.setBroadcast(true);
-      socket.send(packet, port, broadcast, (err) => {
-        socket.close();
-        if (err) reject(err); else resolve();
-      });
-    });
-  });
-}
-
-// SSDP search for TVs on the local network. It does not cross a VPN: there the address is entered by hand.
-function discover(timeoutMs = 3000) {
-  return new Promise((resolve) => {
-    const found = new Map();
-    const socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
-    const search = [
-      'M-SEARCH * HTTP/1.1', 'HOST: 239.255.255.250:1900', 'MAN: "ssdp:discover"', 'MX: 2',
-      'ST: urn:lge-com:service:webos-second-screen:1', '', '',
-    ].join('\r\n');
-    socket.on('message', (msg, rinfo) => {
-      const text = msg.toString();
-      if (!/webos-second-screen/i.test(text)) return;
-      const name = /^DLNADeviceName\.lge\.com:\s*(.+)$/im.exec(text);
-      found.set(rinfo.address, { host: rinfo.address, name: name ? safeDecode(name[1].trim()) : 'LG webOS TV' });
-    });
-    socket.on('error', () => { try { socket.close(); } catch {} resolve([...found.values()]); });
-    socket.bind(() => {
-      const packet = Buffer.from(search);
-      socket.send(packet, 1900, '239.255.255.250');
-      setTimeout(() => socket.send(packet, 1900, '239.255.255.250', () => {}), 800);
-      setTimeout(() => { socket.close(); resolve([...found.values()]); }, timeoutMs);
-    });
-  });
-}
-
-function safeDecode(value) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
-
-module.exports = { WebOSClient, wakeOnLan, discover, BUTTONS };
+module.exports = { WebOSClient, wakeOnLan, BUTTONS };
