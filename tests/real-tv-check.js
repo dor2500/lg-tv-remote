@@ -67,8 +67,9 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
     await save('real-before-key.jpg');
     const result = await page.evaluate((key) => window.lgtv.action('button', key), checkKey);
     console.log(`${checkKey} result:`, JSON.stringify(result));
-    await delay(1500);
+    await delay(4000);
     await save('real-after-key.jpg');
+    await page.screenshot({ path: path.join(OUT, 'real-after-key-app.png') });
   }
   await app.close();
   console.log('Done');
