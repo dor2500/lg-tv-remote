@@ -1,6 +1,6 @@
 {
   "name": "lg-tv-remote",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Windows desktop remote control and screen viewer for LG webOS TVs",
   "main": "src/main/main.js",
   "private": true,

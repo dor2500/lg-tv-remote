@@ -144,6 +144,24 @@ button, input, select { font: inherit; color: inherit; }
 
 .screen.locked { cursor: none; }
 
+/* TV captures leave out the TV's own pointer, so the app draws one at its estimated position */
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px #000) drop-shadow(0 1px 2px #000);
+}
+.cursor span {
+  display: block;
+  width: 20px;
+  height: 28px;
+  background: #fff;
+  clip-path: polygon(0 0, 0 82%, 26% 62%, 44% 100%, 62% 92%, 44% 56%, 78% 56%);
+  transform-origin: 0 0;
+}
+.cursor.pressed span { transform: scale(0.8); }
+
 .lock-hint {
   position: absolute;
   top: 12px;

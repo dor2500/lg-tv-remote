@@ -12,6 +12,8 @@ const ui = {
   pendingMove: { dx: 0, dy: 0 },
   pendingScroll: { dx: 0, dy: 0 },
   moveScheduled: false,
+  cursor: { x: 0, y: 0 },
+  homing: false,
 };
 
 let toastTimer;
@@ -293,12 +295,54 @@ document.addEventListener('pointerlockchange', () => {
   const locked = document.pointerLockElement === screen;
   screen.classList.toggle('locked', locked);
   $('lock-hint').hidden = !locked;
+  $('cursor').hidden = !locked;
+  if (locked) homeCursor();
 });
+
+// The TV's pointer position cannot be read, and captures leave it out. Pushing it into the top-left
+// corner gives a known start, then this estimate follows it. Hitting a screen edge corrects drift.
+const TV_WIDTH = 1920;
+const TV_HEIGHT = 1080;
+
+// Measured on an OLED55C6: the TV accelerates by speed. 2 units per event moved about 1 pixel per unit, 10 moved about 3.
+function pointerGain(dx, dy) {
+  return 0.5 + 0.25 * Math.hypot(dx, dy);
+}
+
+function renderCursor() {
+  const { clientWidth: width, clientHeight: height } = screen;
+  const scale = Math.min(width / TV_WIDTH, height / TV_HEIGHT);
+  const left = (width - TV_WIDTH * scale) / 2 + ui.cursor.x * scale;
+  const top = (height - TV_HEIGHT * scale) / 2 + ui.cursor.y * scale;
+  $('cursor').style.transform = `translate(${left}px, ${top}px)`;
+}
+
+async function homeCursor() {
+  ui.homing = true;
+  ui.cursor = { x: 0, y: 0 };
+  renderCursor();
+  delete $('cursor').dataset.ready;
+  for (let i = 0; i < 40 && document.pointerLockElement === screen; i += 1) {
+    lgtv.move(-60, -40);
+    await new Promise((r) => setTimeout(r, 16));
+  }
+  ui.pendingMove = { dx: 0, dy: 0 };
+  ui.homing = false;
+  $('cursor').dataset.ready = 'true';
+}
+
+window.addEventListener('resize', renderCursor);
 
 function flushPointer() {
   ui.moveScheduled = false;
   const { pendingMove: m, pendingScroll: s } = ui;
-  if (m.dx || m.dy) lgtv.move(m.dx, m.dy);
+  if (m.dx || m.dy) {
+    lgtv.move(m.dx, m.dy);
+    const gain = pointerGain(m.dx, m.dy);
+    ui.cursor.x = Math.max(0, Math.min(TV_WIDTH, ui.cursor.x + m.dx * gain));
+    ui.cursor.y = Math.max(0, Math.min(TV_HEIGHT, ui.cursor.y + m.dy * gain));
+    renderCursor();
+  }
   if (s.dx || s.dy) lgtv.scroll(s.dx, s.dy);
   ui.pendingMove = { dx: 0, dy: 0 };
   ui.pendingScroll = { dx: 0, dy: 0 };
@@ -311,16 +355,20 @@ function schedulePointer() {
 }
 
 document.addEventListener('mousemove', (event) => {
-  if (document.pointerLockElement !== screen) return;
+  if (document.pointerLockElement !== screen || ui.homing) return;
   ui.pendingMove.dx += event.movementX;
   ui.pendingMove.dy += event.movementY;
   schedulePointer();
 });
 
 screen.addEventListener('mousedown', (event) => {
-  if (document.pointerLockElement !== screen) return;
+  if (document.pointerLockElement !== screen || ui.homing) return;
   event.preventDefault();
-  if (event.button === 0) act('click');
+  if (event.button === 0) {
+    act('click');
+    $('cursor').classList.add('pressed');
+    setTimeout(() => $('cursor').classList.remove('pressed'), 120);
+  }
   if (event.button === 2) act('button', 'BACK');
 });
 

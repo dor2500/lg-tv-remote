@@ -80,9 +80,15 @@ async function launch(fake, userData) {
 
   await page.click('#lock');
   await waitFor(() => page.evaluate(() => document.pointerLockElement?.id === 'screen'), 'pointer lock');
+  await page.waitForSelector('#cursor[data-ready]');
   const box = await page.locator('#screen').boundingBox();
+  const startCursor = await page.$eval('#cursor', (el) => el.style.transform);
   await page.mouse.move(box.x + 200, box.y + 200);
   await page.mouse.move(box.x + 260, box.y + 240);
+  await waitFor(async () => (await page.$eval('#cursor', (el) => el.style.transform)) !== startCursor, 'on-screen cursor follows the mouse');
+  assert.equal(await page.locator('#cursor:not([hidden])').count(), 1);
+  await page.screenshot({ path: path.join(OUT, '2b-cursor.png') });
+  console.log('ok on-screen cursor:', await page.$eval('#cursor', (el) => el.style.transform));
   await page.mouse.down();
   await page.mouse.up();
   await page.keyboard.press('ArrowLeft');
