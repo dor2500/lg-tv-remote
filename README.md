@@ -6,11 +6,11 @@ A Windows desktop app that controls an LG webOS TV from your computer: a full on
 
 ![The app showing the home screen of a real LG TV](docs/images/real-home-app.png)
 
-*The app showing the home screen of a real LG OLED55C6.*
+*The app, with its Hebrew interface, showing the home screen of a real LG OLED55C6.*
 
 Nothing is installed on the TV. Developer Mode and root are not needed.
 
-> The app's interface is in Hebrew. The technical details are in [How it works](docs/HOW-IT-WORKS.en.md).
+The app is available in English and Hebrew. The technical details are in [How it works](docs/HOW-IT-WORKS.en.md).
 
 ## Contents
 
@@ -19,6 +19,7 @@ Nothing is installed on the TV. Developer Mode and root are not needed.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Connecting for the first time](#connecting-for-the-first-time)
+- [Choosing a language](#choosing-a-language)
 - [Using the app](#using-the-app)
 - [Turning the TV on over the network](#turning-the-tv-on-over-the-network)
 - [Control from outside your home](#control-from-outside-your-home)
@@ -86,7 +87,7 @@ Run the same command again to update. Close the app first. You can [read the scr
 ### Option 2: Download the file
 
 1. Open the [latest release](https://github.com/dor2500/lg-tv-remote/releases/latest).
-2. Download `LG.TV.Remote.0.1.2.exe`.
+2. Download `LG.TV.Remote.0.1.3.exe`.
 3. Run it. It does not need installing.
 
 The file is not code-signed, so Windows may show a warning. To continue, select **More info**, then **Run anyway**.
@@ -128,11 +129,11 @@ To also remove saved TVs and pairing keys, delete `%APPDATA%\LG TV Remote`.
 
 ## Connecting for the first time
 
-![The connection screen](docs/images/connect.png)
+![The connection screen](docs/images/connect-en.png)
 
 1. Turn on the TV and make sure it is on the same network as the computer.
 2. Open the app.
-3. Select **חפש טלוויזיות ברשת** (search for TVs) and choose your TV. Alternatively, type its IP address and select **התחבר** (connect).
+3. Select **Search for TVs on the network** and choose your TV. Alternatively, type its IP address and select **Connect**.
 4. Accept the request on the TV screen with the TV's remote. You have 90 seconds.
 5. The remote lights up with a green dot, and the app lists your TV's apps and inputs.
 
@@ -142,15 +143,19 @@ Later connections don't need approval.
 
 **Keep the address stable:** reserve a fixed IP for the TV in your router. Otherwise the saved address can stop working when the router assigns a new one.
 
-**If no request appears:** select **התחבר עם קוד PIN** (connect with a PIN) and type the code shown on the TV.
+**If no request appears:** select **Connect with a PIN** and type the code shown on the TV.
+
+## Choosing a language
+
+The app starts in Hebrew if Windows is set to Hebrew, and in English otherwise. To switch, select the language name at the top of the on-screen remote. The app remembers your choice, and the layout flips to match the language.
+
+Messages written by the TV itself are shown as the TV sends them.
 
 ## Using the app
 
-![The control screen](docs/images/control.png)
+![The control screen](docs/images/control-en.png)
 
 *This picture and the one below use a simulated TV.*
-
-The labels below show the Hebrew text you see in the app.
 
 ### The remote
 
@@ -158,17 +163,17 @@ The labels below show the Hebrew text you see in the app.
 |---|---|
 | Red power button | Turns the TV off. When disconnected, tries to turn it on |
 | 0–9 | Number keys |
-| קול + / − | Volume up and down |
-| ערוץ ▲ / ▼ | Next and previous channel |
-| השתק | Mute and unmute |
+| Vol + / − | Volume up and down |
+| CH ▲ / ▼ | Next and previous channel |
+| Mute | Mute and unmute |
 | Slider | Sets the volume directly |
 | Arrows and OK | Navigation |
-| חזרה | Back |
-| בית | Home |
-| יציאה | Exit |
-| הגדרות | Quick settings |
-| מדריך | Programme guide |
-| מידע | Info |
+| Back | Back |
+| Home | Home screen |
+| Exit | Exit |
+| Settings | Quick settings |
+| Guide | Programme guide |
+| Info | Info |
 | Colored buttons | Red, green, yellow and blue keys |
 | Bottom row | Rewind, play, pause, stop, fast forward |
 
@@ -184,15 +189,15 @@ If the connection drops, the app keeps trying to reconnect, waiting up to 30 sec
 
 ### Viewing the screen
 
-![Viewing the TV screen](docs/images/live.png)
+![Viewing the TV screen](docs/images/live-en.png)
 
-Select **הצג את המסך** (show the screen) to start, and **הפסק להציג** (stop showing) to stop. The **קצב** (rate) menu has three options:
+Select **Show screen** to start, and **Stop showing** to stop. The **Rate** menu has three options:
 
 | Option | Time between captures |
 |---|---|
-| מהיר (fast) | 250 ms |
-| רגיל (normal) | 500 ms |
-| חסכוני (economy) | 1.5 s |
+| Fast | 250 ms |
+| Normal | 500 ms |
+| Economy | 1.5 s |
 
 The actual rate appears next to the menu. It can't exceed what the TV delivers: about 3–4 pictures per second on the tested TV.
 
@@ -202,7 +207,7 @@ The original picture from the TV looks like this:
 
 ### Mouse and keyboard
 
-Select **שלוט בעכבר ובמקלדת** (control with mouse and keyboard), or click the picture. The app then captures your mouse until you press Esc.
+Select **Control with mouse and keyboard**, or click the picture. The app then captures your mouse until you press Esc.
 
 | On your computer | On the TV |
 |---|---|
@@ -226,15 +231,15 @@ Select **שלוט בעכבר ובמקלדת** (control with mouse and keyboard),
 
 The side panel appears once you are connected.
 
-- **אפליקציות (apps):** select an app to open it. The filter box searches by name, and the running app is marked.
-- **מקורות (inputs):** switch between HDMI and other inputs.
-- **הקלדה (typing):** send a whole line of text, delete a character, or confirm. A text field must already be open on the TV.
+- **Apps:** select an app to open it. The filter box searches by name, and the running app is marked.
+- **Inputs:** switch between HDMI and other inputs.
+- **Typing:** send a whole line of text, delete a character, or confirm. A text field must already be open on the TV.
 
 ### Other controls
 
-- **כבה רק את המסך** turns off the picture while the TV stays on, for example when listening to music. **הדלק את המסך** turns it back on.
-- **התנתק** disconnects.
-- **שכח**, next to a saved TV on the connection screen, deletes that TV and its pairing key from the computer.
+- **Turn off screen only** turns off the picture while the TV stays on, for example when listening to music. **Turn on screen** turns it back on.
+- **Disconnect** disconnects.
+- **Forget**, next to a saved TV on the connection screen, deletes that TV and its pairing key from the computer.
 
 ## Turning the TV on over the network
 
@@ -291,12 +296,12 @@ Every feature also passes automated tests against a simulated TV. Those tests pr
 
 | Problem | What to do |
 |---|---|
-| "לא הצלחתי להגיע לטלוויזיה" (can't reach the TV) | Check that the TV is on and the address is correct, and that the computer is on the same network |
+| "Can't reach the TV" | Check that the TV is on and the address is correct, and that the computer is on the same network |
 | Network search finds nothing | Type the address by hand. Some networks and firewalls block device discovery |
 | No request appears on the TV | Try connecting with a PIN |
 | Pairing times out | Connect again and accept the request within 90 seconds |
-| The TV keeps asking for approval | Remove the app from the TV's connected devices, if listed, select **שכח** and pair again |
-| "הטלוויזיה הזו חוסמת צילום מסך" (this TV blocks screenshots) | Control keeps working. Try selecting **שכח** and pairing again. Your TV may not allow screenshots |
+| The TV keeps asking for approval | Remove the app from the TV's connected devices, if listed, select **Forget** and pair again |
+| "This TV blocks screenshots" | Control keeps working. Try selecting **Forget** and pairing again. Your TV may not allow screenshots |
 | The picture is black | This is probably protected content |
 | The picture is slow | Choose the fast rate. The TV limits the maximum rate |
 | The white pointer doesn't match the TV | Press Esc and capture again. Trust the item the TV highlights |
@@ -335,7 +340,7 @@ Not through this app without approval on the TV's screen. Pairing needs that app
 - The pairing key is encrypted on your computer with Windows DPAPI.
 - Anyone holding that key on your network could control the TV, so only install the app on computers you trust.
 - The TV uses a self-signed certificate that can't be verified, so the connection is encrypted but the TV's identity isn't checked. Use it on a network you trust.
-- To revoke access, select **שכח** in the app, and remove the app from the TV's connected devices, if your TV lists them.
+- To revoke access, select **Forget** in the app, and remove the app from the TV's connected devices, if your TV lists them.
 
 ## Development
 

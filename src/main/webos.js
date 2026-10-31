@@ -67,7 +67,7 @@ class WebOSClient extends EventEmitter {
         lastError = err;
       }
     }
-    if (!this.ws) throw friendly('UNREACHABLE', `לא הצלחתי להגיע לטלוויזיה ב-${this.host}`, lastError);
+    if (!this.ws) throw friendly('UNREACHABLE', `Cannot reach the TV at ${this.host}`, lastError);
 
     this.ws.on('message', (data) => this._onMessage(data));
     this.ws.on('close', () => this._onClose());
@@ -93,7 +93,7 @@ class WebOSClient extends EventEmitter {
       const id = `register_${this.nextId++}`;
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(friendly('PAIRING_TIMEOUT', 'לא התקבל אישור מהטלוויזיה. אשר את הבקשה על המסך ונסה שוב.'));
+        reject(friendly('PAIRING_TIMEOUT', 'The TV did not approve the pairing in time'));
       }, PAIRING_TIMEOUT_MS);
       this.pending.set(id, {
         timer,
@@ -116,7 +116,7 @@ class WebOSClient extends EventEmitter {
   }
 
   _send(message) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw friendly('NOT_CONNECTED', 'אין חיבור לטלוויזיה');
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw friendly('NOT_CONNECTED', 'Not connected to the TV');
     this.ws.send(JSON.stringify(message));
   }
 
@@ -139,7 +139,7 @@ class WebOSClient extends EventEmitter {
       if (msg.type === 'registered') {
         this._settle(msg.id).resolve(msg.payload);
       } else if (msg.type === 'error') {
-        const text = msg.error || 'הטלוויזיה דחתה את החיבור';
+        const text = msg.error || 'The TV rejected the connection';
         let code = 'REGISTER_ERROR';
         if (/blacklisted/i.test(text)) code = 'CERT_BLACKLISTED';
         else if (/denied|cancel|reject/i.test(text)) code = 'PAIRING_REJECTED';
@@ -153,7 +153,7 @@ class WebOSClient extends EventEmitter {
     const entry = this._settle(msg.id);
     const payload = msg.payload || {};
     if (msg.type === 'error' || payload.returnValue === false) {
-      const text = msg.error || payload.errorText || 'הפקודה נכשלה';
+      const text = msg.error || payload.errorText || 'The command failed';
       entry.reject(friendly(/^401/.test(text) ? 'NO_PERMISSION' : 'REQUEST_FAILED', text));
     } else {
       entry.resolve(payload);
@@ -171,7 +171,7 @@ class WebOSClient extends EventEmitter {
     clearInterval(this.heartbeat);
     this.heartbeat = null;
     for (const [id] of this.pending) {
-      this._settle(id).reject(friendly('NOT_CONNECTED', 'החיבור לטלוויזיה נסגר'));
+      this._settle(id).reject(friendly('NOT_CONNECTED', 'The connection to the TV closed'));
     }
     this.subscriptions.clear();
     this._closePointer();
@@ -199,7 +199,7 @@ class WebOSClient extends EventEmitter {
       const id = `req_${this.nextId++}`;
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(friendly('TIMEOUT', 'הטלוויזיה לא ענתה בזמן'));
+        reject(friendly('TIMEOUT', 'The TV did not answer in time'));
       }, this.requestTimeoutMs);
       this.pending.set(id, { timer, resolve, reject });
       try {
@@ -224,7 +224,7 @@ class WebOSClient extends EventEmitter {
     if (!this.pointerOpening) {
       this.pointerOpening = (async () => {
         const { socketPath } = await this.request('ssap://com.webos.service.networkinput/getPointerInputSocket');
-        if (!socketPath) throw friendly('REQUEST_FAILED', 'הטלוויזיה לא החזירה ערוץ שליטה');
+        if (!socketPath) throw friendly('REQUEST_FAILED', 'The TV returned no input channel');
         const socket = await openSocket(this._toTvUrl(socketPath));
         socket.on('close', () => { if (this.pointer === socket) this.pointer = null; });
         socket.on('error', (err) => this.emit('socket-error', err));
@@ -254,7 +254,7 @@ class WebOSClient extends EventEmitter {
 
   async button(name) {
     const upper = String(name).toUpperCase();
-    if (!BUTTONS.has(upper)) throw friendly('BAD_INPUT', `כפתור לא מוכר: ${name}`);
+    if (!BUTTONS.has(upper)) throw friendly('BAD_INPUT', `Unknown button: ${name}`);
     await this._pointerSend(`type:button\nname:${upper}\n\n`);
   }
 
@@ -344,7 +344,7 @@ class WebOSClient extends EventEmitter {
 
   async capture() {
     const { imageUri } = await this.request('ssap://tv/executeOneShot');
-    if (!imageUri) throw friendly('NO_IMAGE', 'הטלוויזיה לא החזירה תמונה');
+    if (!imageUri) throw friendly('NO_IMAGE', 'The TV returned no picture');
     return downloadImage(this._toTvUrl(imageUri));
   }
 
@@ -374,7 +374,7 @@ function downloadImage(url) {
       const mime = String(res.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
       if (res.statusCode !== 200 || !mime.startsWith('image/')) {
         res.resume();
-        reject(friendly('NO_IMAGE', `הורדת התמונה נכשלה (${res.statusCode})`));
+        reject(friendly('NO_IMAGE', `Picture download failed (${res.statusCode})`));
         return;
       }
       const chunks = [];
@@ -382,7 +382,7 @@ function downloadImage(url) {
       res.on('data', (chunk) => {
         size += chunk.length;
         if (size > MAX_IMAGE_BYTES) {
-          req.destroy(friendly('NO_IMAGE', 'התמונה גדולה מדי'));
+          req.destroy(friendly('NO_IMAGE', 'The picture is too large'));
           return;
         }
         chunks.push(chunk);
@@ -390,7 +390,7 @@ function downloadImage(url) {
       res.on('end', () => resolve({ mime, data: Buffer.concat(chunks) }));
       res.on('error', reject);
     });
-    req.on('timeout', () => req.destroy(friendly('TIMEOUT', 'הורדת התמונה ארכה יותר מדי')));
+    req.on('timeout', () => req.destroy(friendly('TIMEOUT', 'The picture download timed out')));
     req.on('error', reject);
   });
 }
@@ -404,7 +404,7 @@ function friendly(code, message, cause) {
 
 function wakeOnLan(mac, { broadcast = '255.255.255.255', port = 9 } = {}) {
   const hex = String(mac).replace(/[^0-9a-f]/gi, '');
-  if (hex.length !== 12) return Promise.reject(friendly('BAD_INPUT', 'כתובת MAC לא תקינה'));
+  if (hex.length !== 12) return Promise.reject(friendly('BAD_INPUT', 'Invalid MAC address'));
   const macBytes = Buffer.from(hex, 'hex');
   const packet = Buffer.concat([Buffer.alloc(6, 0xff), ...Array(16).fill(macBytes)]);
   return new Promise((resolve, reject) => {

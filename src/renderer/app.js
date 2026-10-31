@@ -14,6 +14,7 @@ const ui = {
   moveScheduled: false,
   cursor: { x: 0, y: 0 },
   homing: false,
+  lastStatus: { state: 'disconnected' },
 };
 
 let toastTimer;
@@ -27,9 +28,24 @@ function showError(message) {
 
 async function act(name, ...args) {
   const result = await lgtv.action(name, ...args);
-  if (!result.ok) showError(result.error);
+  if (!result.ok) showError(errorText(result));
   return result;
 }
+
+/* Language */
+function renderDynamicText() {
+  $('live').textContent = t(ui.live ? 'stopScreen' : 'showScreen');
+  $('screen-toggle').textContent = t(ui.screenOff ? 'screenOn' : 'screenOff');
+  $('fps').textContent = '';
+  ui.frames = [];
+  renderStatusMessage(ui.lastStatus);
+}
+
+$('lang').addEventListener('click', () => {
+  setLanguage(language === 'he' ? 'en' : 'he');
+  renderDynamicText();
+  if (!ui.connected) refreshSaved();
+});
 
 /* Remote keys */
 const numpad = $('numpad');
@@ -52,7 +68,7 @@ $('power').addEventListener('click', async () => {
   } else if (ui.host || $('host').value.trim()) {
     const host = ui.host || $('host').value.trim();
     const result = await lgtv.wake(host);
-    setMessage(result.ok ? 'נשלחה בקשת הדלקה. החיבור יתחדש כשהטלוויזיה תעלה.' : result.error, !result.ok);
+    setMessage(result.ok ? t('wakeSent') : errorText(result), !result.ok);
     if (result.ok) startConnect(host);
   }
 });
@@ -75,7 +91,7 @@ function setMessage(text, isError = false) {
 async function startConnect(host, pairingType) {
   ui.host = host;
   const result = await lgtv.connect(host, pairingType);
-  if (!result.ok) setMessage(result.error, true);
+  if (!result.ok) setMessage(errorText(result), true);
 }
 
 $('connect-form').addEventListener('submit', (event) => {
@@ -86,7 +102,7 @@ $('connect-form').addEventListener('submit', (event) => {
 $('pin-mode').addEventListener('click', () => {
   const host = $('host').value.trim();
   if (!host) {
-    setMessage('כתוב קודם את כתובת הטלוויזיה.', true);
+    setMessage(t('enterAddressFirst'), true);
     return;
   }
   startConnect(host, 'PIN');
@@ -94,17 +110,17 @@ $('pin-mode').addEventListener('click', () => {
 
 $('pin-send').addEventListener('click', async () => {
   const result = await lgtv.action('submitPin', $('pin').value.trim());
-  if (!result.ok) setMessage(result.error, true);
+  if (!result.ok) setMessage(errorText(result), true);
 });
 
 $('scan').addEventListener('click', async () => {
-  setMessage('מחפש טלוויזיות...');
+  setMessage(t('scanning'));
   const result = await lgtv.discover();
   if (!result.ok || !result.value.length) {
-    setMessage('לא נמצאה טלוויזיה. בדוק שהיא דלוקה, או כתוב את הכתובת שלה מהגדרות הרשת.', true);
+    setMessage(t('scanNone'), true);
     return;
   }
-  setMessage(`נמצאו ${result.value.length}. בחר טלוויזיה.`);
+  setMessage(t('scanFound', { count: result.value.length }));
   renderTvList(result.value.map((tv) => ({ host: tv.host, label: tv.name })), false);
 });
 
@@ -125,7 +141,7 @@ function renderTvList(tvs, canForget) {
     if (canForget) {
       const forget = document.createElement('button');
       forget.type = 'button';
-      forget.textContent = 'שכח';
+      forget.textContent = t('forget');
       forget.addEventListener('click', async () => {
         const result = await lgtv.forget(tv.host);
         if (result.ok) renderTvList(result.value.tvs, true);
@@ -137,11 +153,26 @@ function renderTvList(tvs, canForget) {
 }
 
 const STATUS_TEXT = {
-  connecting: 'מתחבר...',
-  reconnecting: 'החיבור נותק. מנסה שוב...',
+  connecting: 'connecting',
+  reconnecting: 'reconnecting',
 };
 
-function applyStatus({ state, host, info, error, pairingType }) {
+function renderStatusMessage({ state, error, errorCode, pairingType }) {
+  const detail = error ? errorText({ code: errorCode, error }) : '';
+  if (state === 'pairing') {
+    setMessage(t(pairingType === 'PIN' ? 'pairingPin' : 'pairingPrompt'));
+  } else if (STATUS_TEXT[state]) {
+    setMessage(detail ? `${t(STATUS_TEXT[state])} (${detail})` : t(STATUS_TEXT[state]));
+  } else if (detail) {
+    setMessage(detail, true);
+  } else {
+    setMessage('');
+  }
+}
+
+function applyStatus(status) {
+  const { state, host, info, pairingType } = status;
+  ui.lastStatus = status;
   $('led').dataset.state = state;
   const connected = state === 'connected';
   ui.connected = connected;
@@ -153,20 +184,9 @@ function applyStatus({ state, host, info, error, pairingType }) {
   $('volume').disabled = !connected;
   $('pin-row').hidden = !(state === 'pairing' && pairingType === 'PIN');
 
-  if (state === 'pairing') {
-    setMessage(pairingType === 'PIN'
-      ? 'כתוב כאן את הקוד שמופיע על מסך הטלוויזיה.'
-      : 'אשר את הבקשה על מסך הטלוויזיה בעזרת השלט.');
-  } else if (STATUS_TEXT[state]) {
-    setMessage(error ? `${STATUS_TEXT[state]} (${error})` : STATUS_TEXT[state]);
-  } else if (error) {
-    setMessage(error, true);
-  } else if (state === 'disconnected') {
-    setMessage('');
-  }
+  renderStatusMessage(status);
 
   if (connected) {
-    setMessage('');
     $('tv-name').textContent = [info.product, info.model].filter(Boolean).join(', ');
     loadLists();
     setLive(false);
@@ -234,7 +254,7 @@ $('text-enter').addEventListener('click', () => act('sendEnter'));
 function setLive(on, silent = false) {
   ui.live = on;
   $('live').setAttribute('aria-pressed', String(on));
-  $('live').textContent = on ? 'הפסק להציג' : 'הצג את המסך';
+  $('live').textContent = t(on ? 'stopScreen' : 'showScreen');
   if (!on) {
     ui.frames = [];
     $('fps').textContent = '';
@@ -249,12 +269,12 @@ function setLive(on, silent = false) {
 async function startLive() {
   const result = await lgtv.liveStart(Number($('rate').value));
   if (!result.ok) {
-    showError(result.error);
+    showError(errorText(result));
     return;
   }
   ui.live = true;
   $('live').setAttribute('aria-pressed', 'true');
-  $('live').textContent = 'הפסק להציג';
+  $('live').textContent = t('stopScreen');
 }
 
 $('live').addEventListener('click', () => (ui.live ? setLive(false) : startLive()));
@@ -269,18 +289,18 @@ lgtv.on('frame', ({ src }) => {
   $('placeholder').hidden = true;
   const now = performance.now();
   ui.frames.push(now);
-  ui.frames = ui.frames.filter((t) => now - t < 5000);
+  ui.frames = ui.frames.filter((time) => now - time < 5000);
   if (ui.frames.length > 1) {
     const fps = (ui.frames.length - 1) / ((now - ui.frames[0]) / 1000);
-    $('fps').textContent = `${fps.toFixed(1)} תמונות בשנייה`;
+    $('fps').textContent = t('fps', { value: fps.toFixed(1) });
   }
 });
 
-lgtv.on('live-stopped', ({ error, code }) => {
+lgtv.on('live-stopped', (result) => {
   setLive(false, true);
-  showError(code === 'NO_PERMISSION'
-    ? 'הטלוויזיה הזו חוסמת צילום מסך. השליטה ממשיכה לעבוד.'
-    : `התצוגה הופסקה: ${error}`);
+  showError(result.code === 'NO_PERMISSION'
+    ? t('captureBlocked')
+    : t('liveStopped', { error: errorText({ code: result.code, error: result.error }) }));
 });
 
 /* Mouse and keyboard capture */
@@ -399,7 +419,7 @@ $('screen-toggle').addEventListener('click', async () => {
   if (!result.ok) return;
   ui.screenOff = next;
   $('screen-toggle').setAttribute('aria-pressed', String(next));
-  $('screen-toggle').textContent = next ? 'הדלק את המסך' : 'כבה רק את המסך';
+  $('screen-toggle').textContent = t(next ? 'screenOn' : 'screenOff');
 });
 
 $('disconnect').addEventListener('click', () => lgtv.disconnect());
@@ -418,4 +438,6 @@ lgtv.on('tv-state', ({ volume, muted, appId }) => {
   }
 });
 
+applyLanguage();
+renderDynamicText();
 refreshSaved();

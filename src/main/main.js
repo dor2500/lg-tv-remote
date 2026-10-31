@@ -85,14 +85,14 @@ async function connect(host, pairingType = 'PROMPT') {
     }
     // Keep retrying a TV we were already paired with (it may just be off); a failed first pairing stops.
     if (store.getKey(host) && err.code === 'UNREACHABLE') {
-      status('reconnecting', { host, error: err.message });
+      status('reconnecting', { host, error: err.message, errorCode: err.code });
       reconnectTimer = setTimeout(() => {
         reconnectDelay = Math.min(reconnectDelay * 2, 30000);
         connect(host).catch(() => {});
       }, reconnectDelay);
     } else {
       wantConnected = null;
-      status('disconnected', { error: err.message });
+      status('disconnected', { error: err.message, errorCode: err.code });
     }
     throw err;
   }
@@ -154,8 +154,15 @@ async function liveLoop(token) {
   }
 }
 
+// The renderer translates these by code.
+function codedError(code, message) {
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
+
 function requireTv() {
-  if (!tv) throw new Error('אין חיבור לטלוויזיה');
+  if (!tv) throw codedError('NOT_CONNECTED', 'Not connected to the TV');
   return tv;
 }
 
@@ -192,7 +199,7 @@ function handle(channel, fn) {
 
 function registerIpc() {
   handle('tv:action', (name, ...args) => {
-    if (!Object.hasOwn(actions, name)) throw new Error('פעולה לא מוכרת');
+    if (!Object.hasOwn(actions, name)) throw new Error(`Unknown action: ${name}`);
     return actions[name](...args);
   });
   handle('tv:connect', (host, pairingType) => connect(String(host).trim(), pairingType));
@@ -211,7 +218,7 @@ function registerIpc() {
   handle('tv:discover', () => discover());
   handle('tv:wake', async (host) => {
     const macs = store.getMacs(host);
-    if (!macs.length) throw new Error('כתובת ה-MAC עוד לא ידועה. התחבר פעם אחת כשהטלוויזיה דולקת.');
+    if (!macs.length) throw codedError('NO_MAC', 'The MAC address is not known yet');
     await Promise.all(macs.map((mac) => wakeOnLan(mac)));
   });
   handle('live:start', (intervalMs) => {

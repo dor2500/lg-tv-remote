@@ -135,6 +135,7 @@ App                                     TV
 | `src/main/store.js` | Saved TVs and keys |
 | `src/main/preload.js` | The bridge between the interface and the main process |
 | `src/renderer/` | The interface |
+| `src/renderer/i18n.js` | English and Hebrew text |
 | `install.ps1` | The one-line PowerShell installer |
 | `tests/fake-tv.js` | The simulated TV |
 | `tests/webos.test.js` | Protocol tests |

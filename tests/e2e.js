@@ -40,6 +40,34 @@ async function launch(fake, userData) {
 
   await page.screenshot({ path: path.join(OUT, '1-connect.png') });
 
+  // Language switch: both directions, translated labels, translated errors, and the choice survives a reload.
+  const setLang = async (lang) => {
+    if ((await page.getAttribute('html', 'lang')) !== lang) await page.click('#lang');
+    assert.equal(await page.getAttribute('html', 'lang'), lang);
+  };
+  await setLang('en');
+  assert.equal(await page.getAttribute('html', 'dir'), 'ltr');
+  assert.equal(await page.textContent('#connect-btn'), 'Connect');
+  await page.click('#pin-mode');
+  assert.equal(await page.textContent('#connect-msg'), 'Type the TV address first.');
+  const hebrew = await page.evaluate(() => {
+    const seen = [];
+    for (const el of document.querySelectorAll('body *')) {
+      for (const text of [el.childNodes.length === 1 ? el.textContent : '', el.placeholder, el.title, el.alt, el.getAttribute('aria-label')]) {
+        if (text && /[֐-׿]/.test(text) && el.id !== 'lang') seen.push(text);
+      }
+    }
+    return seen;
+  });
+  assert.deepEqual(hebrew, [], 'no Hebrew left in the English interface');
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  assert.equal(await page.getAttribute('html', 'lang'), 'en', 'language choice is remembered');
+  await setLang('he');
+  assert.equal(await page.getAttribute('html', 'dir'), 'rtl');
+  assert.equal(await page.textContent('#connect-btn'), 'התחבר');
+  console.log('ok language switch');
+
   await page.fill('#host', '127.0.0.1');
   await page.click('#connect-btn');
   await page.waitForSelector('#stand:not([hidden])');
@@ -74,7 +102,7 @@ async function launch(fake, userData) {
 
   await page.click('#placeholder-live');
   await page.waitForSelector('#frame:not([hidden])');
-  await waitFor(async () => /תמונות/.test(await page.textContent('#fps')), 'fps display');
+  await waitFor(async () => /\d/.test(await page.textContent('#fps')), 'fps display');
   await page.screenshot({ path: path.join(OUT, '2-live.png') });
   console.log('ok live view:', await page.textContent('#fps'));
 
@@ -83,8 +111,10 @@ async function launch(fake, userData) {
   await page.waitForSelector('#cursor[data-ready]');
   const box = await page.locator('#screen').boundingBox();
   const startCursor = await page.$eval('#cursor', (el) => el.style.transform);
-  await page.mouse.move(box.x + 200, box.y + 200);
-  await page.mouse.move(box.x + 260, box.y + 240);
+  for (let i = 0; i < 6; i += 1) {
+    await page.mouse.move(box.x + 200 + i * 30, box.y + 200 + i * 20);
+    await delay(40);
+  }
   await waitFor(async () => (await page.$eval('#cursor', (el) => el.style.transform)) !== startCursor, 'on-screen cursor follows the mouse');
   assert.equal(await page.locator('#cursor:not([hidden])').count(), 1);
   await page.screenshot({ path: path.join(OUT, '2b-cursor.png') });
@@ -107,6 +137,13 @@ async function launch(fake, userData) {
   const registers = fake.log.filter((e) => e.type === 'register').slice(registersBefore);
   assert.ok(registers.length >= 1 && registers.every((r) => r.hadKey), 'reconnect uses saved key');
   console.log('ok automatic reconnect');
+
+  // Switching language while connected must not disturb the session.
+  await page.click('#lang');
+  assert.equal(await page.textContent('#disconnect'), 'Disconnect');
+  assert.equal(await page.locator('#stand:not([hidden])').count(), 1);
+  await page.click('#lang');
+  console.log('ok language switch while connected');
 
   await page.click('#disconnect');
   await page.waitForSelector('#connect-form:not([hidden])');

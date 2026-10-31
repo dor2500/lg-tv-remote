@@ -72,6 +72,16 @@ button, input, select { font: inherit; color: inherit; }
 .power { width: 38px; height: 38px; border-radius: 50%; background: #a8352c; font-size: 17px; }
 .power:hover { background: #c1433a; }
 
+.lang {
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  color: #2a2c2e;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .led { width: 9px; height: 9px; border-radius: 50%; background: #8a8778; }
 .led[data-state="connected"] { background: #1f9d55; }
 .led[data-state="connecting"], .led[data-state="pairing"], .led[data-state="reconnecting"] { background: #d9a400; }
@@ -243,6 +253,7 @@ input:not([type]), select, .connect input {
   padding: 5px 8px;
 }
 .list button[aria-current="true"] { background: var(--panel); box-shadow: inset -3px 0 0 var(--glow); }
+[dir="ltr"] .list button[aria-current="true"] { box-shadow: inset 3px 0 0 var(--glow); }
 
 .toast {
   position: fixed;

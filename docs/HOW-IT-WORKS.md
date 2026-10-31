@@ -132,6 +132,7 @@ App                                     TV
 | `src/main/store.js` | שמירת טלוויזיות ומפתחות |
 | `src/main/preload.js` | הגשר בין הממשק לתהליך הראשי |
 | `src/renderer/` | הממשק |
+| `src/renderer/i18n.js` | הטקסטים בעברית ובאנגלית |
 | `install.ps1` | מתקין ה-PowerShell בפקודה אחת |
 | `tests/fake-tv.js` | סימולטור טלוויזיה |
 | `tests/packaged-smoke.js` | בדיקת הגרסה הארוזה |

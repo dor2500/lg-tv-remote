@@ -8,139 +8,141 @@
 </head>
 <body>
   <main class="room">
-    <aside class="remote" aria-label="שלט">
+    <aside class="remote" data-i18n-aria="remote">
       <div class="remote-top">
-        <button class="key power" id="power" title="כיבוי הטלוויזיה" aria-label="כיבוי הטלוויזיה">⏻</button>
-        <span id="led" class="led" title="מצב חיבור"></span>
+        <button class="key power" id="power" data-i18n-title="powerOff" data-i18n-aria="powerOff">⏻</button>
+        <button class="lang" id="lang" data-i18n="switchTo"></button>
+        <span id="led" class="led" data-i18n-title="connectionState"></span>
       </div>
 
       <div class="numpad" id="numpad" dir="ltr"></div>
 
       <div class="rockers">
         <div class="rocker">
-          <button class="key" data-button="VOLUMEUP" aria-label="הגבר">+</button>
-          <span>קול</span>
-          <button class="key" data-button="VOLUMEDOWN" aria-label="הנמך">−</button>
+          <button class="key" data-button="VOLUMEUP" data-i18n-aria="volumeUp">+</button>
+          <span data-i18n="volumeLabel"></span>
+          <button class="key" data-button="VOLUMEDOWN" data-i18n-aria="volumeDown">−</button>
         </div>
-        <button class="key mute" id="mute" aria-pressed="false">השתק</button>
+        <button class="key mute" id="mute" aria-pressed="false" data-i18n="mute"></button>
         <div class="rocker">
-          <button class="key" data-button="CHANNELUP" aria-label="ערוץ הבא">▲</button>
-          <span>ערוץ</span>
-          <button class="key" data-button="CHANNELDOWN" aria-label="ערוץ קודם">▼</button>
+          <button class="key" data-button="CHANNELUP" data-i18n-aria="channelNext">▲</button>
+          <span data-i18n="channelLabel"></span>
+          <button class="key" data-button="CHANNELDOWN" data-i18n-aria="channelPrev">▼</button>
         </div>
       </div>
 
-      <input id="volume" class="volume" type="range" min="0" max="100" value="0" aria-label="עוצמת קול" disabled>
+      <input id="volume" class="volume" type="range" min="0" max="100" value="0" data-i18n-aria="volume" disabled>
 
       <div class="dpad" dir="ltr">
-        <button class="key arrow up" data-button="UP" aria-label="למעלה">▲</button>
-        <button class="key arrow left" data-button="LEFT" aria-label="שמאלה">◀</button>
+        <button class="key arrow up" data-button="UP" data-i18n-aria="up">▲</button>
+        <button class="key arrow left" data-button="LEFT" data-i18n-aria="left">◀</button>
         <button class="key ok" data-button="ENTER">OK</button>
-        <button class="key arrow right" data-button="RIGHT" aria-label="ימינה">▶</button>
-        <button class="key arrow down" data-button="DOWN" aria-label="למטה">▼</button>
+        <button class="key arrow right" data-button="RIGHT" data-i18n-aria="right">▶</button>
+        <button class="key arrow down" data-button="DOWN" data-i18n-aria="down">▼</button>
       </div>
 
       <div class="row3">
-        <button class="key" data-button="BACK">חזרה</button>
-        <button class="key" data-button="HOME">בית</button>
-        <button class="key" data-button="EXIT">יציאה</button>
+        <button class="key" data-button="BACK" data-i18n="back"></button>
+        <button class="key" data-button="HOME" data-i18n="home"></button>
+        <button class="key" data-button="EXIT" data-i18n="exit"></button>
       </div>
       <div class="row3">
-        <button class="key" data-button="QMENU">הגדרות</button>
-        <button class="key" data-button="GUIDE">מדריך</button>
-        <button class="key" data-button="INFO">מידע</button>
+        <button class="key" data-button="QMENU" data-i18n="settings"></button>
+        <button class="key" data-button="GUIDE" data-i18n="guide"></button>
+        <button class="key" data-button="INFO" data-i18n="info"></button>
       </div>
 
       <div class="colors" dir="ltr">
-        <button class="key c red" data-button="RED" aria-label="אדום"></button>
-        <button class="key c green" data-button="GREEN" aria-label="ירוק"></button>
-        <button class="key c yellow" data-button="YELLOW" aria-label="צהוב"></button>
-        <button class="key c blue" data-button="BLUE" aria-label="כחול"></button>
+        <button class="key c red" data-button="RED" data-i18n-aria="red"></button>
+        <button class="key c green" data-button="GREEN" data-i18n-aria="green"></button>
+        <button class="key c yellow" data-button="YELLOW" data-i18n-aria="yellow"></button>
+        <button class="key c blue" data-button="BLUE" data-i18n-aria="blue"></button>
       </div>
 
       <div class="media" dir="ltr">
-        <button class="key" data-button="REWIND" aria-label="הרצה אחורה">&#x23EA;&#xFE0E;</button>
-        <button class="key" data-button="PLAY" aria-label="נגן">&#x25B6;&#xFE0E;</button>
-        <button class="key" data-button="PAUSE" aria-label="השהה">&#x23F8;&#xFE0E;</button>
-        <button class="key" data-button="STOP" aria-label="עצור">&#x23F9;&#xFE0E;</button>
-        <button class="key" data-button="FASTFORWARD" aria-label="הרצה קדימה">&#x23E9;&#xFE0E;</button>
+        <button class="key" data-button="REWIND" data-i18n-aria="rewind">&#x23EA;&#xFE0E;</button>
+        <button class="key" data-button="PLAY" data-i18n-aria="play">&#x25B6;&#xFE0E;</button>
+        <button class="key" data-button="PAUSE" data-i18n-aria="pause">&#x23F8;&#xFE0E;</button>
+        <button class="key" data-button="STOP" data-i18n-aria="stop">&#x23F9;&#xFE0E;</button>
+        <button class="key" data-button="FASTFORWARD" data-i18n-aria="fastForward">&#x23E9;&#xFE0E;</button>
       </div>
     </aside>
 
     <section class="tv">
       <div class="bezel">
         <div class="screen" id="screen">
-          <img id="frame" alt="תמונת מסך הטלוויזיה" hidden>
+          <img id="frame" data-i18n-alt="frameAlt" alt="" hidden>
 
           <form class="connect" id="connect-form" autocomplete="off">
-            <h1>חיבור לטלוויזיית LG</h1>
-            <p class="hint">המחשב והטלוויזיה צריכים להיות באותה רשת, או מחוברים דרך VPN.</p>
-            <label for="host">כתובת הטלוויזיה</label>
+            <h1 data-i18n="connectTitle"></h1>
+            <p class="hint" data-i18n="connectHint"></p>
+            <label for="host" data-i18n="tvAddress"></label>
             <div class="inline">
               <input id="host" dir="ltr" placeholder="192.168.1.50" required spellcheck="false">
-              <button type="submit" class="primary" id="connect-btn">התחבר</button>
+              <button type="submit" class="primary" id="connect-btn" data-i18n="connect"></button>
             </div>
             <div class="inline">
-              <button type="button" id="scan">חפש טלוויזיות ברשת</button>
-              <button type="button" id="pin-mode">התחבר עם קוד PIN</button>
+              <button type="button" id="scan" data-i18n="scan"></button>
+              <button type="button" id="pin-mode" data-i18n="connectPin"></button>
             </div>
             <ul id="tv-list" class="tv-list"></ul>
             <p class="message" id="connect-msg" role="status"></p>
             <div class="inline" id="pin-row" hidden>
-              <input id="pin" dir="ltr" inputmode="numeric" placeholder="הקוד שעל המסך" aria-label="קוד PIN">
-              <button type="button" class="primary" id="pin-send">שלח קוד</button>
+              <input id="pin" dir="ltr" inputmode="numeric" data-i18n-placeholder="pinPlaceholder" data-i18n-aria="pinCode">
+              <button type="button" class="primary" id="pin-send" data-i18n="sendPin"></button>
             </div>
           </form>
 
           <div class="placeholder" id="placeholder" hidden>
-            <p>התצוגה כבויה. אפשר לשלוט בטלוויזיה גם בלי לראות אותה כאן.</p>
-            <button id="placeholder-live" class="primary">הצג את המסך</button>
+            <p data-i18n="viewOff"></p>
+            <button id="placeholder-live" class="primary" data-i18n="showScreen"></button>
           </div>
 
           <div class="cursor" id="cursor" hidden><span></span></div>
 
-          <p class="lock-hint" id="lock-hint" hidden>העכבר והמקלדת שולטים בטלוויזיה. קליק ימני: חזרה. Esc: שחרור. מיקום הסמן משוער: הפריט המודגש במסך הוא המדויק.</p>
+          <p class="lock-hint" id="lock-hint" data-i18n="lockHint" hidden></p>
         </div>
       </div>
 
       <div class="stand" id="stand" hidden>
-        <button id="live" aria-pressed="false">הצג את המסך</button>
-        <label class="rate">קצב
+        <button id="live" aria-pressed="false"></button>
+        <label class="rate"><span data-i18n="rate"></span>
           <select id="rate">
-            <option value="250">מהיר</option>
-            <option value="500" selected>רגיל</option>
-            <option value="1500">חסכוני</option>
+            <option value="250" data-i18n="rateFast"></option>
+            <option value="500" data-i18n="rateNormal" selected></option>
+            <option value="1500" data-i18n="rateEconomy"></option>
           </select>
         </label>
         <span class="stat" id="fps"></span>
-        <button id="lock">שלוט בעכבר ובמקלדת</button>
+        <button id="lock" data-i18n="lock"></button>
         <span class="tv-name" id="tv-name"></span>
-        <button id="screen-toggle" aria-pressed="false">כבה רק את המסך</button>
-        <button id="disconnect">התנתק</button>
+        <button id="screen-toggle" aria-pressed="false"></button>
+        <button id="disconnect" data-i18n="disconnect"></button>
       </div>
     </section>
 
     <aside class="drawer" id="drawer" hidden>
-      <h2>אפליקציות</h2>
-      <input id="app-filter" placeholder="חיפוש אפליקציה" aria-label="חיפוש אפליקציה">
+      <h2 data-i18n="apps"></h2>
+      <input id="app-filter" data-i18n-placeholder="searchApps" data-i18n-aria="searchApps">
       <ul id="apps" class="list"></ul>
 
-      <h2>מקורות</h2>
+      <h2 data-i18n="inputs"></h2>
       <ul id="inputs" class="list"></ul>
 
-      <h2>הקלדה</h2>
-      <p class="hint">עובד כששדה טקסט פתוח בטלוויזיה.</p>
+      <h2 data-i18n="typing"></h2>
+      <p class="hint" data-i18n="typingHint"></p>
       <form id="text-form" class="stack">
-        <input id="text" placeholder="טקסט לשליחה" aria-label="טקסט לשליחה">
+        <input id="text" data-i18n-placeholder="textToSend" data-i18n-aria="textToSend">
         <div class="inline">
-          <button type="submit">שלח</button>
-          <button type="button" id="text-del">מחק תו</button>
-          <button type="button" id="text-enter">אישור</button>
+          <button type="submit" data-i18n="send"></button>
+          <button type="button" id="text-del" data-i18n="deleteChar"></button>
+          <button type="button" id="text-enter" data-i18n="confirm"></button>
         </div>
       </form>
     </aside>
   </main>
   <div class="toast" id="toast" role="alert" hidden></div>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
