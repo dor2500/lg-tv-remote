@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:">
+  <title>LG TV Remote</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="room">
+    <aside class="remote" aria-label="שלט">
+      <div class="remote-top">
+        <button class="key power" id="power" title="כיבוי הטלוויזיה" aria-label="כיבוי הטלוויזיה">⏻</button>
+        <span id="led" class="led" title="מצב חיבור"></span>
+      </div>
+
+      <div class="numpad" id="numpad" dir="ltr"></div>
+
+      <div class="rockers">
+        <div class="rocker">
+          <button class="key" data-button="VOLUMEUP" aria-label="הגבר">+</button>
+          <span>קול</span>
+          <button class="key" data-button="VOLUMEDOWN" aria-label="הנמך">−</button>
+        </div>
+        <button class="key mute" id="mute" aria-pressed="false">השתק</button>
+        <div class="rocker">
+          <button class="key" data-button="CHANNELUP" aria-label="ערוץ הבא">▲</button>
+          <span>ערוץ</span>
+          <button class="key" data-button="CHANNELDOWN" aria-label="ערוץ קודם">▼</button>
+        </div>
+      </div>
+
+      <input id="volume" class="volume" type="range" min="0" max="100" value="0" aria-label="עוצמת קול" disabled>
+
+      <div class="dpad" dir="ltr">
+        <button class="key arrow up" data-button="UP" aria-label="למעלה">▲</button>
+        <button class="key arrow left" data-button="LEFT" aria-label="שמאלה">◀</button>
+        <button class="key ok" data-button="ENTER">OK</button>
+        <button class="key arrow right" data-button="RIGHT" aria-label="ימינה">▶</button>
+        <button class="key arrow down" data-button="DOWN" aria-label="למטה">▼</button>
+      </div>
+
+      <div class="row3">
+        <button class="key" data-button="BACK">חזרה</button>
+        <button class="key" data-button="HOME">בית</button>
+        <button class="key" data-button="EXIT">יציאה</button>
+      </div>
+      <div class="row3">
+        <button class="key" data-button="QMENU">הגדרות</button>
+        <button class="key" data-button="GUIDE">מדריך</button>
+        <button class="key" data-button="INFO">מידע</button>
+      </div>
+
+      <div class="colors" dir="ltr">
+        <button class="key c red" data-button="RED" aria-label="אדום"></button>
+        <button class="key c green" data-button="GREEN" aria-label="ירוק"></button>
+        <button class="key c yellow" data-button="YELLOW" aria-label="צהוב"></button>
+        <button class="key c blue" data-button="BLUE" aria-label="כחול"></button>
+      </div>
+
+      <div class="media" dir="ltr">
+        <button class="key" data-button="REWIND" aria-label="הרצה אחורה">&#x23EA;&#xFE0E;</button>
+        <button class="key" data-button="PLAY" aria-label="נגן">&#x25B6;&#xFE0E;</button>
+        <button class="key" data-button="PAUSE" aria-label="השהה">&#x23F8;&#xFE0E;</button>
+        <button class="key" data-button="STOP" aria-label="עצור">&#x23F9;&#xFE0E;</button>
+        <button class="key" data-button="FASTFORWARD" aria-label="הרצה קדימה">&#x23E9;&#xFE0E;</button>
+      </div>
+    </aside>
+
+    <section class="tv">
+      <div class="bezel">
+        <div class="screen" id="screen">
+          <img id="frame" alt="תמונת מסך הטלוויזיה" hidden>
+
+          <form class="connect" id="connect-form" autocomplete="off">
+            <h1>חיבור לטלוויזיית LG</h1>
+            <p class="hint">המחשב והטלוויזיה צריכים להיות באותה רשת, או מחוברים דרך VPN.</p>
+            <label for="host">כתובת הטלוויזיה</label>
+            <div class="inline">
+              <input id="host" dir="ltr" placeholder="192.168.1.50" required spellcheck="false">
+              <button type="submit" class="primary" id="connect-btn">התחבר</button>
+            </div>
+            <div class="inline">
+              <button type="button" id="scan">חפש טלוויזיות ברשת</button>
+              <button type="button" id="pin-mode">התחבר עם קוד PIN</button>
+            </div>
+            <ul id="tv-list" class="tv-list"></ul>
+            <p class="message" id="connect-msg" role="status"></p>
+            <div class="inline" id="pin-row" hidden>
+              <input id="pin" dir="ltr" inputmode="numeric" placeholder="הקוד שעל המסך" aria-label="קוד PIN">
+              <button type="button" class="primary" id="pin-send">שלח קוד</button>
+            </div>
+          </form>
+
+          <div class="placeholder" id="placeholder" hidden>
+            <p>התצוגה כבויה. אפשר לשלוט בטלוויזיה גם בלי לראות אותה כאן.</p>
+            <button id="placeholder-live" class="primary">הצג את המסך</button>
+          </div>
+
+          <p class="lock-hint" id="lock-hint" hidden>העכבר והמקלדת שולטים עכשיו בטלוויזיה. קליק ימני: חזרה. Esc: שחרור.</p>
+        </div>
+      </div>
+
+      <div class="stand" id="stand" hidden>
+        <button id="live" aria-pressed="false">הצג את המסך</button>
+        <label class="rate">קצב
+          <select id="rate">
+            <option value="250">מהיר</option>
+            <option value="500" selected>רגיל</option>
+            <option value="1500">חסכוני</option>
+          </select>
+        </label>
+        <span class="stat" id="fps"></span>
+        <button id="lock">שלוט בעכבר ובמקלדת</button>
+        <span class="tv-name" id="tv-name"></span>
+        <button id="screen-toggle" aria-pressed="false">כבה רק את המסך</button>
+        <button id="disconnect">התנתק</button>
+      </div>
+    </section>
+
+    <aside class="drawer" id="drawer" hidden>
+      <h2>אפליקציות</h2>
+      <input id="app-filter" placeholder="חיפוש אפליקציה" aria-label="חיפוש אפליקציה">
+      <ul id="apps" class="list"></ul>
+
+      <h2>מקורות</h2>
+      <ul id="inputs" class="list"></ul>
+
+      <h2>הקלדה</h2>
+      <p class="hint">עובד כששדה טקסט פתוח בטלוויזיה.</p>
+      <form id="text-form" class="stack">
+        <input id="text" placeholder="טקסט לשליחה" aria-label="טקסט לשליחה">
+        <div class="inline">
+          <button type="submit">שלח</button>
+          <button type="button" id="text-del">מחק תו</button>
+          <button type="button" id="text-enter">אישור</button>
+        </div>
+      </form>
+    </aside>
+  </main>
+  <div class="toast" id="toast" role="alert" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
