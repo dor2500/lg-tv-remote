@@ -27,6 +27,20 @@
 
 ## התקנה
 
+### פקודה אחת ב-PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/dor2500/lg-tv-remote/main/install.ps1 | iex
+```
+
+הפקודה מורידה את הגרסה האחרונה, מתקינה אותה בתיקיית המשתמש בלי הרשאות מנהל, מוסיפה קיצור דרך לתפריט התחל ופותחת את האפליקציה. הרצה חוזרת מעדכנת לגרסה האחרונה. אפשר לקרוא קודם את [הסקריפט](install.ps1).
+
+להסרה:
+
+```powershell
+Remove-Item -Recurse "$env:LOCALAPPDATA\Programs\LG TV Remote"; Remove-Item "$([Environment]::GetFolderPath('Programs'))\LG TV Remote.lnk"
+```
+
 ### קובץ מוכן
 
 1. הורד את `LG.TV.Remote.0.1.2.exe` מדף [Releases](../../releases/latest).
