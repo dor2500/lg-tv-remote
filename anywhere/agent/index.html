@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TV Anywhere</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #10222b; color: #eef3f4; font-family: Arial, Helvetica, sans-serif; }
+  .wrap { position: absolute; top: 12%; left: 12%; right: 12%; }
+  h1 { font-size: 44px; margin: 0 0 8px; }
+  p { font-size: 26px; color: #9fc0c9; margin: 0 0 40px; }
+  .pair { display: inline-block; width: 46%; vertical-align: top; }
+  .label { font-size: 26px; color: #9fc0c9; margin-bottom: 8px; }
+  .code { font-size: 76px; font-weight: bold; letter-spacing: 3px; color: #7fd8e6; font-family: "Courier New", monospace; }
+  .status { margin-top: 44px; font-size: 28px; }
+  .status.good { color: #62d68c; }
+  .status.bad { color: #ffb86b; }
+  .foot { margin-top: 26px; font-size: 24px; color: #9fc0c9; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>TV Anywhere</h1>
+    <p id="intro"></p>
+    <div class="pair"><div class="label" id="id-label"></div><div class="code" id="id"></div></div>
+    <div class="pair"><div class="label" id="password-label"></div><div class="code" id="password"></div></div>
+    <div class="status" id="status"></div>
+    <div class="status" id="tv-status"></div>
+    <div class="foot" id="valid"></div>
+    <div class="foot" id="rotate"></div>
+  </div>
+  <script src="nacl-fast.min.js"></script>
+  <script src="session.js"></script>
+  <script src="core.js"></script>
+  <script src="config.js"></script>
+  <script src="adapter.js"></script>
+  <script src="ui.js"></script>
+</body>
+</html>

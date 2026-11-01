@@ -8,13 +8,15 @@
   "scripts": {
     "start": "electron .",
     "start:fake": "node tests/run-with-fake-tv.js",
-    "test": "node --test tests/webos.test.js tests/brands.test.js",
+    "test": "node --test tests/webos.test.js tests/brands.test.js tests/anywhere.test.js",
     "test:e2e": "node tests/e2e.js",
     "test:brands": "node tests/e2e-brands.js",
+    "test:anywhere": "node anywhere/build.js && node tests/e2e-anywhere.js",
     "dist": "electron-builder --win portable"
   },
   "dependencies": {
     "selfsigned": "^2.4.1",
+    "tweetnacl": "^1.0.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -25,7 +27,11 @@
   "build": {
     "appId": "com.dor2500.lgtvremote",
     "productName": "Universal TV Remote",
-    "files": ["src/**/*"],
-    "win": { "target": "portable" }
+    "files": [
+      "src/**/*"
+    ],
+    "win": {
+      "target": "portable"
+    }
   }
 }

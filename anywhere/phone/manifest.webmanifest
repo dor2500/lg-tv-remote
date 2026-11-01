@@ -1,0 +1,11 @@
+{
+  "name": "TV Anywhere",
+  "short_name": "TV Anywhere",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#10222b",
+  "theme_color": "#10222b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

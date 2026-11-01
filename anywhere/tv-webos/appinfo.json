@@ -1,0 +1,10 @@
+{
+  "id": "com.dor2500.tvanywhere",
+  "version": "0.1.0",
+  "vendor": "dor2500",
+  "type": "web",
+  "main": "index.html",
+  "title": "TV Anywhere",
+  "icon": "icon.png",
+  "resolution": "1920x1080"
+}

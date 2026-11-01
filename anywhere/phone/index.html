@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10222b">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src ws: wss:; img-src 'self' data:; style-src 'self'; script-src 'self'">
+<title>TV Anywhere</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <form id="login" class="page" autocomplete="off">
+    <div class="top"><h1>TV Anywhere</h1><button type="button" id="lang" class="link"></button></div>
+    <p class="hint" data-t="loginHint"></p>
+    <label for="id" data-t="id"></label>
+    <input id="id" dir="ltr" inputmode="numeric" placeholder="123 456 789" required>
+    <label for="password" data-t="password"></label>
+    <input id="password" dir="ltr" autocapitalize="characters" spellcheck="false" placeholder="ABCDE FGHJK" required>
+    <button type="submit" class="primary" id="connect" data-t="connect"></button>
+    <p id="message" class="message" role="status"></p>
+  </form>
+
+  <main id="remote" class="page" hidden>
+    <div class="top">
+      <button id="power" class="round danger" data-aria="power">⏻</button>
+      <span id="tv-name" class="tv-name" dir="ltr"></span>
+      <button id="leave" class="link" data-t="disconnect"></button>
+    </div>
+
+    <div id="view" class="view" hidden><img id="frame" data-alt="screen" alt=""></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" data-tab="pad" role="tab" aria-selected="true" data-t="tabRemote"></button>
+      <button class="tab" data-tab="mouse" id="tab-mouse" role="tab" data-t="tabMouse"></button>
+      <button class="tab" data-tab="apps" id="tab-apps" role="tab" data-t="tabApps"></button>
+      <button class="tab" data-tab="more" role="tab" data-t="tabMore"></button>
+    </div>
+
+    <section id="pad" class="panel">
+      <div class="dpad" dir="ltr">
+        <button class="key up" data-button="UP" data-aria="up">▲</button>
+        <button class="key left" data-button="LEFT" data-aria="left">◀</button>
+        <button class="key ok" data-button="ENTER">OK</button>
+        <button class="key right" data-button="RIGHT" data-aria="right">▶</button>
+        <button class="key down" data-button="DOWN" data-aria="down">▼</button>
+      </div>
+      <div class="row">
+        <button class="key" data-button="BACK" data-t="back"></button>
+        <button class="key" data-button="HOME" data-t="home"></button>
+        <button class="key" data-button="EXIT" data-t="exit"></button>
+      </div>
+      <div class="row">
+        <button class="key" data-button="VOLUMEDOWN" data-aria="volDown">🔉</button>
+        <button class="key" id="mute" data-t="mute"></button>
+        <button class="key" data-button="VOLUMEUP" data-aria="volUp">🔊</button>
+      </div>
+      <div class="row">
+        <button class="key" data-button="CHANNELDOWN" data-t="chDown"></button>
+        <button class="key" data-button="QMENU" data-t="settings"></button>
+        <button class="key" data-button="CHANNELUP" data-t="chUp"></button>
+      </div>
+      <div class="row" dir="ltr">
+        <button class="key" data-button="REWIND" data-aria="rewind">⏪︎</button>
+        <button class="key" data-button="PLAY" data-aria="play">▶︎</button>
+        <button class="key" data-button="PAUSE" data-aria="pause">⏸︎</button>
+        <button class="key" data-button="FASTFORWARD" data-aria="forward">⏩︎</button>
+      </div>
+      <div class="digits" id="digits" dir="ltr"></div>
+    </section>
+
+    <section id="mouse" class="panel" hidden>
+      <div id="touchpad" class="touchpad"><span data-t="padHint"></span></div>
+    </section>
+
+    <section id="apps" class="panel" hidden>
+      <ul id="app-list" class="list"></ul>
+    </section>
+
+    <section id="more" class="panel" hidden>
+      <label id="live-row" class="switch"><input type="checkbox" id="live"> <span data-t="showScreen"></span></label>
+      <div id="volume-row"><label for="volume" data-t="volume"></label><input id="volume" type="range" min="0" max="100"></div>
+      <div id="inputs-row"><h2 data-t="inputs"></h2><ul id="input-list" class="list"></ul></div>
+      <form id="text-form"><h2 data-t="typing"></h2>
+        <input id="text" data-placeholder="typingHint">
+        <div class="row">
+          <button type="submit" class="key" data-t="send"></button>
+          <button type="button" class="key" id="text-del" data-t="deleteChar"></button>
+          <button type="button" class="key" id="text-enter" data-t="confirm"></button>
+        </div>
+      </form>
+      <button id="screen-off" class="key wide" data-t="screenOff"></button>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="alert" hidden></div>
+  <script src="nacl-fast.min.js"></script>
+  <script src="session.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

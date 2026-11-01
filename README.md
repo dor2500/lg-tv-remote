@@ -14,6 +14,8 @@ Nothing is installed on the TV. Developer Mode and root are not needed.
 
 The app is available in English and Hebrew. The technical details are in [How it works](docs/HOW-IT-WORKS.en.md).
 
+**Control from a phone, from anywhere:** [TV Anywhere](anywhere/README.md) is an unfinished early preview in this repository.
+
 ## Contents
 
 - [Quick install](#quick-install)
